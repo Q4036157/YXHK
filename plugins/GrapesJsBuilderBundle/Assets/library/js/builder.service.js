@@ -1,5 +1,5 @@
 import grapesjs from 'grapesjs';
-import chineseLocale, { localizeEditorLabels } from './locale.zh';
+import chineseLocale, { localizeEditorLabels, chineseImageEditorLocale } from './locale.zh';
 import grapesjsmjml from 'grapesjs-mjml';
 import grapesjsnewsletter from 'grapesjs-preset-newsletter';
 import grapesjswebpage from 'grapesjs-preset-webpage';
@@ -1191,6 +1191,11 @@ export default class BuilderService {
         [grapesjswebpage]: {
           formsOpts: false,
           useCustomTheme: false,
+        },
+        [grapesjstuiimageeditor]: {
+          labelImageEditor: '图片编辑器',
+          labelApply: '应用',
+          config: { includeUI: { locale: chineseImageEditorLocale } },
         },
         grapesjsmautic: BuilderService.getMauticConf('page-html'),
         [grapesjsckeditor]: {

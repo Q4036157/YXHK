@@ -124,7 +124,7 @@ export default (editor, opts = {}) => {
       // Add Settings Sector
       const traitsSector = $(
         '<div class="gjs-sm-sector no-select">' +
-          '<div class="gjs-sm-title"><span class="icon-settings fa fa-cog"></span> Settings</div>' +
+          '<div class="gjs-sm-title"><span class="icon-settings fa fa-cog"></span> 设置</div>' +
           '<div class="gjs-sm-properties" style="display: none;"></div></div>'
       );
       const traitsProps = traitsSector.find('.gjs-sm-properties');

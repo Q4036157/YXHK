@@ -122,6 +122,29 @@ export function localizeEditorLabels(editor) {
   });
 }
 
+export const chineseImageEditorLocale = {
+  Load: '打开图片', Download: '下载', Undo: '撤销', Redo: '重做', Reset: '重置',
+  Delete: '删除', 'Delete-all': '全部删除', Hand: '拖动画布', History: '历史记录',
+  Resize: '调整尺寸', Crop: '裁剪', Flip: '翻转', Rotate: '旋转', Draw: '绘制',
+  Shape: '形状', Icon: '图标', Text: '文本', Mask: '蒙版', Filter: '滤镜',
+  ZoomIn: '放大', ZoomOut: '缩小', Apply: '应用', Cancel: '取消', Custom: '自定义',
+  Square: '正方形', FlipX: '水平翻转', FlipY: '垂直翻转', Range: '范围',
+  Free: '自由绘制', Line: '直线', Color: '颜色', Fill: '填充', Stroke: '描边',
+  Rectangle: '矩形', Circle: '圆形', Triangle: '三角形', Arrow: '箭头',
+  'Arrow-2': '箭头二', 'Arrow-3': '箭头三', Star: '星形', 'Star-2': '星形二',
+  Polygon: '多边形', Location: '位置标记', Heart: '心形', Bubble: '气泡',
+  'Text size': '文字大小', Bold: '加粗', Italic: '倾斜', Underline: '下划线',
+  Left: '左对齐', Center: '居中', Right: '右对齐', Blur: '模糊', Sharpen: '锐化',
+  Emboss: '浮雕', RemoveWhite: '去除白色', Distance: '距离', Brightness: '亮度',
+  Noise: '噪点', Pixelate: '像素化', ColorFilter: '颜色过滤', Threshold: '阈值',
+  Tint: '色调', Multiply: '正片叠底', Blend: '混合', Transparency: '透明度',
+  Grayscale: '灰度', Invert: '反色', Sepia: '褐色', Sepia2: '褐色二',
+  Horizontal: '水平', Vertical: '垂直', Width: '宽度', Height: '高度',
+  'Lock Aspect Ratio': '锁定宽高比', 'Maintain aspect ratio': '保持宽高比',
+  'Actual Size': '原始尺寸', 'Checkbox': '复选框', 'Input text': '输入文本',
+  'Stroke width': '描边宽度', 'Text align': '文本对齐',
+};
+
 export default {
   locale: 'zh',
   localeFallback: 'zh',
