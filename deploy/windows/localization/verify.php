@@ -37,6 +37,8 @@ foreach (['app/bundles', 'plugins'] as $base) {
                 $errors[] = 'Missing translation: '.$key;
             } elseif (placeholders($value) !== placeholders($chinese[$key])) {
                 $errors[] = 'Placeholder mismatch: '.$key;
+            } elseif (str_contains($key, '.searchcommand.') && !preg_match('/\.(description|label)$/', $key) && $value !== $chinese[$key]) {
+                $errors[] = 'Search command identifier must remain unchanged: '.$key;
             }
         }
     }
