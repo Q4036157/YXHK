@@ -6,6 +6,8 @@ Private data: `E:/pxy-runtime/YXHK/tenants/<tenant>`.
 Runtime tools: `E:/pxy-deploy/YXHK/tools`.
 
 The workstation uses PHP 8.3 NTS with Caddy/FastCGI. Docker is not required.
+The generated local bundle uses the Windows Sass launcher and passes only the
+small environment needed by Sass, avoiding Windows environment block limits.
 Every customer needs a separate MySQL database and database account, runtime
 directory, configuration, Windows service identity and scheduled tasks. Native
 Mautic roles within one database are not a tenant isolation boundary.
