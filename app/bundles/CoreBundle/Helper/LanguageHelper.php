@@ -128,10 +128,10 @@ class LanguageHelper
         if (!empty($overrideFile) && is_readable($overrideFile)) {
             $overrideData = json_decode(file_get_contents($overrideFile), true);
             if (isset($overrideData['languages'])) {
-                return $overrideData['languages'];
+                return $this->localizeLanguageNames($overrideData['languages']);
             }
             if (isset($overrideData['name'])) {
-                return $overrideData;
+                return $this->localizeLanguageNames($overrideData);
             }
 
             return [];
@@ -143,7 +143,7 @@ class LanguageHelper
 
             // If we're within the cache time, return the cached data
             if ($cacheData['checkedTime'] > strtotime('-12 hours')) {
-                return $cacheData['languages'];
+                return $this->localizeLanguageNames($cacheData['languages']);
             }
         }
 
@@ -199,6 +199,22 @@ class LanguageHelper
         ];
 
         file_put_contents($this->cacheFile, json_encode($cacheData));
+
+        return $this->localizeLanguageNames($languages);
+    }
+
+    private function localizeLanguageNames(array $languages): array
+    {
+        if (!str_starts_with($this->translator->getLocale(), 'zh')) {
+            return $languages;
+        }
+
+        foreach ($languages as $code => &$language) {
+            if (is_array($language) && isset($language['name']) && \Symfony\Component\Intl\Locales::exists($code)) {
+                $language['name'] = \Symfony\Component\Intl\Locales::getName($code, 'zh');
+            }
+        }
+        unset($language);
 
         return $languages;
     }

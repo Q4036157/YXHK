@@ -200,3 +200,19 @@ function initSelectThemeGrapesjs(parentInitSelectTheme) {
 Mautic.launchBuilder = launchBuilderGrapesjs;
 Mautic.initSelectTheme = initSelectThemeGrapesjs(Mautic.initSelectTheme);
 Mautic.setThemeHtml = setThemeHtml;
+
+// Toolbar copies must also work when the original inline handler is unavailable.
+mQuery(document).on('click.yxhkBuilder', '.btn-builder', function (event) {
+  if (this.disabled || mQuery(this).hasClass('link-is-disabled')) {
+    return;
+  }
+  event.preventDefault();
+  if (mQuery('.builder').hasClass('builder-active')) {
+    return;
+  }
+  const id = this.id || '';
+  const formName = id.startsWith('emailform_') ? 'emailform' : id.startsWith('page_') ? 'page' : null;
+  if (formName) {
+    launchBuilderGrapesjs(formName);
+  }
+});
