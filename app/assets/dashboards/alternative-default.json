@@ -1,9 +1,9 @@
 {
-    "name": "Engagement",
-    "description": "Start with a dashboard of 13 widgets that provide insights into lead generation, engagement, email interactions, and contact management.",
+    "name": "接合",
+    "description": "从一个包含13个小部件的仪表板开始，这些小部件提供了对潜在客户生成、参与、电子邮件交互和联系人管理的深入了解。",
     "widgets": [
         {
-            "name": "Contacts created",
+            "name": "新增联系人",
             "width": 100,
             "height": 330,
             "ordering": 0,
@@ -15,7 +15,7 @@
             "template": null
         },
         {
-            "name": "Visits",
+            "name": "访问",
             "width": 50,
             "height": 330,
             "ordering": 1,
@@ -26,17 +26,16 @@
             "template": null
         },
         {
-            "name": "Contact map",
+            "name": "联络图",
             "width": 50,
             "height": 330,
             "ordering": 3,
             "type": "map.of.leads",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Emails sent \/ opened",
+            "name": "发送/打开的电子邮件",
             "width": 50,
             "height": 330,
             "ordering": 5,
@@ -47,93 +46,84 @@
             "template": null
         },
         {
-            "name": "Points",
+            "name": "积分",
             "width": 50,
             "height": 330,
             "ordering": 6,
             "type": "points.in.time",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Unique\/returning visitors",
+            "name": "独特/回头客",
             "width": 25,
             "height": 330,
             "ordering": 7,
             "type": "unique.vs.returning.leads",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Identified vs anonymous leads",
+            "name": "已识别vs匿名线索",
             "width": 25,
             "height": 330,
             "ordering": 8,
             "type": "anonymous.vs.identified.leads",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Ignored\/opened emails",
+            "name": "忽略/打开的电子邮件",
             "width": 25,
             "height": 330,
             "ordering": 9,
             "type": "ignored.vs.read.emails",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Upcoming Emails",
+            "name": "待发送邮件",
             "width": 25,
             "height": 330,
             "ordering": 10,
             "type": "upcoming.emails",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Top Contact Creators",
+            "name": "顶级联系人创建者",
             "width": 100,
             "height": 330,
             "ordering": 11,
             "type": "top.creators",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Dwell times",
+            "name": "停留时间",
             "width": 25,
             "height": 330,
             "ordering": 12,
             "type": "dwell.times",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Recent activity",
+            "name": "近期活动",
             "width": 50,
             "height": 330,
             "ordering": 13,
             "type": "recent.activity",
-            "params": [
-            ],
+            "params": [],
             "template": null
         },
         {
-            "name": "Top lists",
+            "name": "顶级列表",
             "width": 25,
             "height": 330,
             "ordering": 14,
             "type": "top.lists",
-            "params": [
-            ],
+            "params": [],
             "template": null
         }
     ]

@@ -26,7 +26,7 @@ export default class ButtonClose {
       {
         id: 'close',
         className: 'fa fa-times-circle',
-        attributes: { title: 'Close' },
+        attributes: { title: Mautic.translate('yxhk.ui.7d9eb7acb13e2462') },
         command: this.command,
       },
     ]);

@@ -35,7 +35,7 @@
             </span>
         </span>
             {% if (lead and securityHasEntityAccess('lead:leads:editown', 'lead:leads:editother', lead.getPermissionUser())) %}
-                <span class="form-buttons btn-group btn-group-xs mb-3" role="group" aria-label="Field options">
+                <span class="form-buttons btn-group btn-group-xs mb-3" role="group" aria-label="{{ 'yxhk.ui.3faa98f7e8a637a0'|trans }}">
                     <button type="button" id="timeline-campaign-event-save-{{ item.event_id }}"
                             class="btn btn-ghost btn-nospin" onmousedown="return false;"
                             onclick="Mautic.saveScheduledCampaignEvent({{ item.event_id }}, {{ lead.getId() }})"
@@ -56,7 +56,7 @@
             {% endif %}
         </p>
     {% endif %}
-    
+
     {% if (errors) %}
         {% if (item.isScheduled) %}
             <hr/>
@@ -64,13 +64,13 @@
         <p class="text-danger mt-0 mb-10"><i class="ri-alert-line"></i> {{ 'mautic.campaign.event.last_error'|trans }}
             :<br/>{{ errors|purify }}</p>
     {% endif %}
-    
+
     {% if (item.metadata.timeline is defined and item.metadata.timeline is not empty or item.campaign_description or item.event_description) %}
         <hr/>
         {% if (item.metadata.timeline is defined and item.metadata.timeline is not empty) %}
             <p class="mt-0 mb-10">{{ item.metadata.timeline }}</p>
         {% endif %}
-        
+
         {% if (item.campaign_description) %}
             <p class="mt-0 mb-10">{{ 'mautic.campaign.campaign.description'|trans({'%description%' : item.campaign_description})|purify }}</p>
         {% endif %}
@@ -90,7 +90,7 @@
                     '%operator%': props.operator ?? '',
                     '%comparisonValue%': comparisonValue ?? '',
                     '%value%': value ?? '',
-                })|purify }}  
+                })|purify }}
             {% endif %}
         </h6>
         <dl class="dl-horizontal">

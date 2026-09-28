@@ -111,7 +111,7 @@ Mautic.renderLineChart = function(canvas) {
                             }
                             return '';
                         }
-                        
+
                     }
                 }]
             }
@@ -484,7 +484,7 @@ Mautic.emulateNoDataForPieChart = function (data) {
             value: 1,
             color: "#efeeec",
             highlight: "#EBEBEB",
-            label: "No data"
+            label: Mautic.translate('yxhk.ui.3b41ba9c7cb8c5d6')
         }];
     }
     return data;

@@ -1,9 +1,9 @@
 {
-    "name": "Example - Stats Overview",
-    "description": "Start with a dashboard of 10 widgets that provide statistic about lead generation, engagement, and email interactions.",
+    "name": "示例-统计数据概述",
+    "description": "从10个小部件的仪表板开始，这些小部件提供有关潜在客户生成，参与和电子邮件交互的统计数据。",
     "widgets": [
         {
-            "name": "Contacts created",
+            "name": "新增联系人",
             "width": 50,
             "height": 330,
             "ordering": 0,
@@ -15,7 +15,7 @@
             "template": null
         },
         {
-            "name": "Visits",
+            "name": "访问",
             "width": 50,
             "height": 330,
             "ordering": 1,
@@ -26,7 +26,7 @@
             "template": null
         },
         {
-            "name": "Points",
+            "name": "积分",
             "width": 50,
             "height": 330,
             "ordering": 3,
@@ -35,7 +35,7 @@
             "template": null
         },
         {
-            "name": "Downloads in time",
+            "name": "及时下载",
             "width": 50,
             "height": 330,
             "ordering": 4,
@@ -44,7 +44,7 @@
             "template": null
         },
         {
-            "name": "Emails sent \/ opened",
+            "name": "发送/打开的电子邮件",
             "width": 50,
             "height": 330,
             "ordering": 5,
@@ -55,7 +55,7 @@
             "template": null
         },
         {
-            "name": "Submissions in time",
+            "name": "及时提交",
             "width": 50,
             "height": 330,
             "ordering": 6,
@@ -64,7 +64,7 @@
             "template": null
         },
         {
-            "name": "Identified vs anonymous leads",
+            "name": "已识别vs匿名线索",
             "width": 25,
             "height": 330,
             "ordering": 7,
@@ -73,7 +73,7 @@
             "template": null
         },
         {
-            "name": "Ignored\/opened emails",
+            "name": "忽略/打开的电子邮件",
             "width": 25,
             "height": 330,
             "ordering": 8,
@@ -82,7 +82,7 @@
             "template": null
         },
         {
-            "name": "Unique\/returning visitors",
+            "name": "独特/回头客",
             "width": 25,
             "height": 330,
             "ordering": 9,
@@ -91,7 +91,7 @@
             "template": null
         },
         {
-            "name": "Dwell times",
+            "name": "停留时间",
             "width": 25,
             "height": 330,
             "ordering": 11,

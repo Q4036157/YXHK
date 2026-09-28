@@ -69,6 +69,16 @@ final class TranslationLoader extends ArrayLoader implements LoaderInterface
             }
         }
 
+        // Versioned workstation translations override downloaded language packs.
+        $nativeTranslations = $this->pathsHelper->getRootPath().'/deploy/windows/localization/'.$locale;
+        if (is_dir($nativeTranslations)) {
+            $iniFiles = new Finder();
+            $iniFiles->files()->in($nativeTranslations)->name('*.ini');
+            foreach ($iniFiles as $file) {
+                $this->loadTranslations($catalogue, $locale, $file);
+            }
+        }
+
         return $catalogue;
     }
 

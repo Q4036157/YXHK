@@ -481,24 +481,24 @@ export const themeConfigMixin = {
       merged.push(
         {
           model: 'paragraph',
-          title: 'Paragraph',
+          title: Mautic.translate('yxhk.ui.c3b03dd28595bab2'),
           class: 'ck-heading_paragraph'
         },
         {
           model: 'heading1',
-          title: 'Heading 1',
+          title: '一级标题',
           class: 'ck-heading_heading1',
           view: 'h1'
         },
         {
           model: 'heading2',
-          title: 'Heading 2',
+          title: '二级标题',
           class: 'ck-heading_heading2',
           view: 'h2'
         },
         {
           model: 'heading3',
-          title: 'Heading 3',
+          title: '三级标题',
           class: 'ck-heading_heading3',
           view: 'h3'
         }
@@ -510,7 +510,7 @@ export const themeConfigMixin = {
     if (!merged.some(item => this.normalizeHeadingModel(item && item.model) === 'paragraph')) {
       merged.unshift({
         model: 'paragraph',
-        title: 'Paragraph',
+        title: Mautic.translate('yxhk.ui.c3b03dd28595bab2'),
         class: 'ck-heading_paragraph'
       });
     }

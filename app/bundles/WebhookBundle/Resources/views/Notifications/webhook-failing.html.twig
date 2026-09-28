@@ -5,35 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-<p>Dear User,</p>
-<p>We wanted to bring to your attention that we've detected a failure in one of your configured webhooks. This issue has been ongoing for a significant period and requires your immediate attention to prevent potential disruptions.</p>
+<p>{{ 'yxhk.ui.df96125e6d148579'|trans }}</p>
+<p>{{ 'yxhk.ui.c7d3cbfbd5a21ecf'|trans }}</p>
 
-<h2>Details of the Issue:</h2>
+<h2>{{ 'yxhk.ui.8ea75bc544b035ba'|trans }}</h2>
 <div class="content">
-    <p><strong>Webhook Name/ID:</strong>
+    <p><strong>{{ 'yxhk.ui.aed668c5fed5b20c'|trans }}</strong>
         <a href="{{ path('mautic_webhook_action', {'objectAction': 'view', 'objectId': webhook.id}) }}">
             {{ webhook.name }}
         </a>
     </p>
-    <p><strong>Failure Started At:</strong> {{  failing_since }} (UTC)</p>
-    <p><strong>Current Status:</strong> Failing</p>
+    <p><strong>{{ 'yxhk.ui.63bc9fd10e8b556b'|trans }}</strong> {{  failing_since }} (UTC)</p>
+    <p><strong>{{ 'yxhk.ui.90cdddb9ee1882a6'|trans }}</strong> {{ 'yxhk.ui.3903780c0e106f35'|trans }}</p>
 </div>
 
-<h2>Recommended Action:</h2>
+<h2>{{ 'yxhk.ui.8482c53574382726'|trans }}</h2>
 <div class="content">
     <ul>
-        <li>Review the webhook configuration and ensure that the endpoint URL is correct and reachable.</li>
-        <li>Check any related server logs for error messages that might indicate the cause of the failure.</li>
-        <li>Please verify the authentication credentials, if required by the webhook endpoint.</li>
-        <li>Consider temporarily disabling the webhook to prevent further alerts while you resolve the issue.</li>
+        <li>{{ 'yxhk.ui.30d872400b4941ea'|trans }}</li>
+        <li>{{ 'yxhk.ui.e662acfd9aea79aa'|trans }}</li>
+        <li>{{ 'yxhk.ui.8b64bc5c280bec69'|trans }}</li>
+        <li>{{ 'yxhk.ui.157ddb8215549680'|trans }}</li>
     </ul>
-    <p>Our technical support team is available to assist you if necessary.</p>
-    <p>By resolving this promptly, you can prevent further complications from arising.</p>
+    <p>{{ 'yxhk.ui.6521fcc92ade6b33'|trans }}</p>
+    <p>{{ 'yxhk.ui.1bfafa8c0fddd26e'|trans }}</p>
 </div>
 
-<p class="footer">Thank you for your attention to this matter.</p>
+<p class="footer">{{ 'yxhk.ui.6817edaec007e025'|trans }}</p>
 
-<p>Best Regards,</p>
+<p>{{ 'yxhk.ui.32a2a2ca14e4e62b'|trans }}</p>
 <p>{{ signature_from_name }}</p>
 </body>
 </html>

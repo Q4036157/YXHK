@@ -46,7 +46,7 @@ export default (editor, opts = {}) => {
       {
         id: 'undo',
         className: 'fa fa-undo',
-        attributes: { title: 'Undo' },
+        attributes: { title: Mautic.translate('yxhk.ui.a8283ade31856f71') },
         command() {
           editor.runCommand('core:undo');
         },
@@ -60,7 +60,7 @@ export default (editor, opts = {}) => {
       {
         id: 'redo',
         className: 'fa fa-repeat',
-        attributes: { title: 'Redo' },
+        attributes: { title: Mautic.translate('yxhk.ui.74273989b0966e23') },
         command() {
           editor.runCommand('core:redo');
         },

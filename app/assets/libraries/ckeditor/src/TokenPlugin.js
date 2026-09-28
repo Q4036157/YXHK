@@ -6,7 +6,7 @@ export default class TokenPlugin extends Plugin {
     init() {
         const editor = this.editor;
         const tokens = typeof editor.config._config.dynamicToken != undefined ? editor.config._config.dynamicToken : [] ;
-        const tokens_label = typeof editor.config._config.dynamicTokenLabel != undefined ? editor.config._config.dynamicTokenLabel : "Insert Token" ;
+        const tokens_label = editor.config._config.dynamicTokenLabel || "插入变量";
         editor.ui.componentFactory.add('TokenPlugin', (locale) => {
             const dropdownView = createDropdown(locale);
             dropdownView.buttonView.set({
@@ -27,7 +27,7 @@ export default class TokenPlugin extends Plugin {
                     const tn = itemId.substr(5, itemId.length - 6);
                     tokenName = tokenName + ' (' + tn + ')';
                 } else if (itemId.match(/contactfield=company/i) && !tokenName.match(/company/i)){
-                    tokenName = 'Company ' + tokenName;
+                    tokenName = '公司 ' + tokenName;
                 }
 
                 items.add({
@@ -47,9 +47,9 @@ export default class TokenPlugin extends Plugin {
                 editor.model.change(writer => {
                     let content = "<span class='atwho-inserted' data-fr-verified='true'>"+id+"</span>";
                     if (id.match(/assetlink=/i)) {
-                        content = '<a title="Asset Link" href="' + id + '">' + this.getCleanLinkLabel(label) + '</a>';
+                        content = '<a title="素材链接" href="' + id + '">' + this.getCleanLinkLabel(label) + '</a>';
                     } else if (id.match(/pagelink=/i)) {
-                        content = '<a title="Page Link" href="' + id + '">' + this.getCleanLinkLabel(label) + '</a>';
+                        content = '<a title="页面链接" href="' + id + '">' + this.getCleanLinkLabel(label) + '</a>';
                     }
 
                     const viewFragment = editor.data.processor.toView( content );

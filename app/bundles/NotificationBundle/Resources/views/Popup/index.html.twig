@@ -26,15 +26,15 @@
     <div id="mobile-top-section">
         <div id="mobile-top-section-wrapper">
             <div id="mobile-top-section-content">
-                <div class="title domainName">This website</div>
-                <p id="mobile-directions">wants to show notifications:</p>
+                <div class="title domainName">{{ 'yxhk.ui.60b896e5173a5e7d'|trans }}</div>
+                <p id="mobile-directions">{{ 'yxhk.ui.a91249b87c00c964'|trans }}</p>
 
                 <div style="display: none;" id="mobile-notification">
                     <img id="mobile-notification-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMDY3IDc5LjE1Nzc0NywgMjAxNS8wMy8zMC0yMzo0MDo0MiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RDdBOEVEMjU3RTgwMTFFNUIzMjFCOUQ0QjUzN0Q0NDYiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RDdBOEVEMjY3RTgwMTFFNUIzMjFCOUQ0QjUzN0Q0NDYiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDODdGODRDMDdEMTMxMUU1QjMyMUI5RDRCNTM3RDQ0NiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpEN0E4RUQyNDdFODAxMUU1QjMyMUI5RDRCNTM3RDQ0NiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pttyb1cAAACySURBVHja7N2xDUMhDEBBO0rJ33++SNkAJKqET1YwTYp7hUV9smtyzvmKiCtUqecG/OzHg0Wp7w9ucCg3bN5hAAECBAhQAAECBCiAAAECFECAAAEKIECAAAUQIECAAggQIEABBAgQoAACBAhQZ4CZSe4EcK1FzgkDBAhQAAECBAhQAAECBCiAAAECFECAAAEKIECAAAUQIECAAggQIEABBPivgA1Dufbc4x2+w6jWbwEGAJZEES0DZiYyAAAAAElFTkSuQmCC">
 
-                    <p id="mobile-notification-title" class="truncatable long desktop message">Example Notification</p>
+                    <p id="mobile-notification-title" class="truncatable long desktop message">{{ 'yxhk.ui.0ea47701cfeb6476'|trans }}</p>
 
-                    <p id="mobile-notification-message" class="truncatable short desktop message">Notifications will appear on your device</p>
+                    <p id="mobile-notification-message" class="truncatable short desktop message">{{ 'yxhk.ui.60b7d218a934e42d'|trans }}</p>
 
                     <p id="mobile-notification-url" class="truncatable short desktop message">{{ siteUrl }}</p>
                 </div>
@@ -44,9 +44,9 @@
 
                     <p id="x">x</p>
 
-                    <p id="desktop-notification-title" class="truncatable mobile message">This is an example notification</p>
+                    <p id="desktop-notification-title" class="truncatable mobile message">{{ 'yxhk.ui.8bd05af3fa4ced6f'|trans }}</p>
 
-                    <p id="desktop-notification-message" class="truncatable mobile message">Notifications will appear on your desktop</p>
+                    <p id="desktop-notification-message" class="truncatable mobile message">{{ 'yxhk.ui.58835104aa2f33ce'|trans }}</p>
 
                     <p id="desktop-notification-url" class="truncatable mobile message">{{ siteUrl }}</p>
                 </div>
@@ -61,57 +61,54 @@
 
         <!-- if on ios -->
         <div class="error" id="ios">
-            <p> Web Push Notifications are not supported by iOS. </p>
+            <p> {{ 'yxhk.ui.e4077572a148fa04'|trans }} </p>
         </div>
 
         <!-- if not on chrome (Desktop) -->
         <div class="error" id="not-chrome-desktop">
-            <p> Web Push Notifications are not supported by your browser. Please install
-                <a class="default-link" href="https://www.google.com/chrome/browser/desktop" target="_blank">Chrome</a> to get
-                notifications. </p>
+            <p> {{ 'yxhk.ui.527f49a6f1a71bef'|trans }}
+                <a class="default-link" href="https://www.google.com/chrome/browser/desktop" target="_blank">Chrome</a> {{ 'yxhk.ui.785f0c5241f99d44'|trans }} </p>
         </div>
 
         <!-- if not on chrome (Android) -->
         <div class="error" id="not-chrome-Android">
-            <p> Please install Chrome web browser to get notifications. </p>
+            <p> {{ 'yxhk.ui.266e21bf76269a0d'|trans }} </p>
 
-            <p><a class="default-link" href="https://play.google.com/store/apps/details?id=com.android.chrome">Tap here</a> to
-                download from the Google Play Store.</p>
+            <p><a class="default-link" href="https://play.google.com/store/apps/details?id=com.android.chrome">{{ 'yxhk.ui.0a41e4191c7a5c91'|trans }}</a> {{ 'yxhk.ui.567013294a81e768'|trans }}</p>
         </div>
 
         <!-- not have latest version of chrome (desktop) -->
         <div class="error" id="outdated-chrome-desktop">
-            <p> Please update your Chrome web browser to get notifications. </p>
+            <p> {{ 'yxhk.ui.4e25a0a716498142'|trans }} </p>
         </div>
 
         <!-- not have latest version of chrome (mobile) -->
         <div class="error" id="outdated-chrome-mobile">
-            <p> Please update your Chrome web browser to get notifications. </p>
+            <p> {{ 'yxhk.ui.4e25a0a716498142'|trans }} </p>
 
-            <p><a class="default-link" href="https://play.google.com/store/apps/details?id=com.android.chrome">Tap here</a> to
-                download from the Google Play Store.</p>
+            <p><a class="default-link" href="https://play.google.com/store/apps/details?id=com.android.chrome">{{ 'yxhk.ui.0a41e4191c7a5c91'|trans }}</a> {{ 'yxhk.ui.567013294a81e768'|trans }}</p>
         </div>
 
         <!-- if notifications are disabled (desktop)-->
         <div class="error" id="disabled-notifications-desktop">
-            <p> Notifications are currently disabled.</p>
+            <p> {{ 'yxhk.ui.f6b5b85065e5d0a8'|trans }}</p>
 
-            <p>Please re-enable them by clicking on the lock icon in the top left of this window. </p>
+            <p>{{ 'yxhk.ui.1c9b82c73381033a'|trans }} </p>
         </div>
 
         <!-- if notifications are disabled (mobile) -->
         <div class="error" id="disabled-notifications-mobile">
-            <p> Notifications are currently disabled.</p>
+            <p> {{ 'yxhk.ui.f6b5b85065e5d0a8'|trans }}</p>
 
-            <p>Please re-enable them by tapping on the lock icon on the top left. </p>
+            <p>{{ 'yxhk.ui.67170444a24bb120'|trans }} </p>
         </div>
 
         <!-- if notifications are already enabled -->
         <div class="error" id="notifications-already-enabled">
-            <p> Notifications are already enabled, you may close this window. </p>
+            <p> {{ 'yxhk.ui.54ec2745db9326e4'|trans }} </p>
 
-            <p style="font-size: 12px">If you would like to unsubscribe from all notifications from
-                <span class="domainName">{{ siteUrl }}</span> click on the lock icon to the left of the address. </p>
+            <p style="font-size: 12px">{{ 'yxhk.ui.19ef2c98f0166bbd'|trans }}
+                <span class="domainName">{{ siteUrl }}</span> {{ 'yxhk.ui.6aafbb2e7e96c1c6'|trans }} </p>
         </div>
 
     </div>

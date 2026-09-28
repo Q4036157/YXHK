@@ -235,21 +235,21 @@ Mautic.GetCkEditorConfigOptions  = function(ckEditorToolbarOptions, tokenCallbac
     const defaultOptions = ['undo', 'redo', '|', 'bold', 'italic', 'underline', 'heading', 'fontfamily', 'fontsize', 'fontColor', 'fontBackgroundColor', 'alignment', 'numberedList', 'bulletedList', 'blockQuote', 'removeFormat', 'link', 'ckfinder', 'mediaEmbed', 'insertTable', 'sourceEditing'];
     const ckEditorToolbar = typeof ckEditorToolbarOptions != "undefined" && ckEditorToolbarOptions.length > 0 ? ckEditorToolbarOptions : defaultOptions;
     const ckEditorColors = [
-        { color: '#000000', label: 'Black' },
-        { color: '#4d4d4d', label: 'Dim grey' },
-        { color: '#999999', label: 'Grey' },
-        { color: '#e6e6e6', label: 'Light grey' },
-        { color: '#ffffff', label: 'White', hasBorder: true },
-        { color: '#e64c4c', label: 'Red' },
-        { color: '#e6994c', label: 'Orange' },
-        { color: '#e6e64c', label: 'Yellow' },
-        { color: '#99e64c', label: 'Light green' },
-        { color: '#4ce64c', label: 'Green' },
-        { color: '#4ce699', label: 'Aquamarine' },
-        { color: '#4ce6e6', label: 'Turquoise' },
-        { color: '#4c99e6', label: 'Light blue' },
-        { color: '#4c4ce6', label: 'Blue' },
-        { color: '#994ce6', label: 'Purple' }
+        { color: '#000000', label: Mautic.translate('yxhk.ui.c6cfe6e4f129a346') },
+        { color: '#4d4d4d', label: Mautic.translate('yxhk.ui.eab20dd91b194f92') },
+        { color: '#999999', label: Mautic.translate('yxhk.ui.d4ac58091b024645') },
+        { color: '#e6e6e6', label: Mautic.translate('yxhk.ui.8209d96ad8c307af') },
+        { color: '#ffffff', label: Mautic.translate('yxhk.ui.3495e757855a5c67'), hasBorder: true },
+        { color: '#e64c4c', label: Mautic.translate('yxhk.ui.ba19e9c3d5f49882') },
+        { color: '#e6994c', label: Mautic.translate('yxhk.ui.78e7771b8b46e11d') },
+        { color: '#e6e64c', label: Mautic.translate('yxhk.ui.19dd83f117525b93') },
+        { color: '#99e64c', label: Mautic.translate('yxhk.ui.b561c35b4933fda4') },
+        { color: '#4ce64c', label: Mautic.translate('yxhk.ui.d486dfbd5fb57834') },
+        { color: '#4ce699', label: Mautic.translate('yxhk.ui.ef23e98791d6461e') },
+        { color: '#4ce6e6', label: Mautic.translate('yxhk.ui.27b0da11a987cdd9') },
+        { color: '#4c99e6', label: Mautic.translate('yxhk.ui.087adcfa71866911') },
+        { color: '#4c4ce6', label: Mautic.translate('yxhk.ui.ec7d56a01607001e') },
+        { color: '#994ce6', label: Mautic.translate('yxhk.ui.7d465fb9b9314846') }
     ];
     const allowFullHtml = textarea && typeof textarea.attr('allow-full-html') !== 'undefined';
     const ckEditorOption = {
@@ -285,7 +285,7 @@ Mautic.GetCkEditorConfigOptions  = function(ckEditorToolbarOptions, tokenCallbac
                 // based on: https://ckeditor.com/docs/ckeditor5/latest/features/link.html#adding-target-and-rel-attributes-to-external-links
                 openInNewTab: {
                     mode: 'manual',
-                    label: 'Open in a new tab',
+                    label: Mautic.translate('yxhk.ui.306ef19c8ac3d276'),
                     attributes: {
                         target: '_blank',
                         rel: 'noopener noreferrer'

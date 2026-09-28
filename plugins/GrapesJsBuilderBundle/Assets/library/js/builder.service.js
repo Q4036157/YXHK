@@ -1,4 +1,5 @@
 import grapesjs from 'grapesjs';
+import chineseLocale from './locale.zh';
 import grapesjsmjml from 'grapesjs-mjml';
 import grapesjsnewsletter from 'grapesjs-preset-newsletter';
 import grapesjswebpage from 'grapesjs-preset-webpage';
@@ -1149,6 +1150,7 @@ export default class BuilderService {
     const pageInlineOptions = BuilderService.buildInlineCkeConf(pageCkEditorOptions);
 
     this.editor = grapesjs.init({
+      i18n: chineseLocale,
       clearOnRender: true,
       container: '.builder-panel',
       components: contentService.getOriginalContentHtml().body.innerHTML,
@@ -1251,6 +1253,7 @@ export default class BuilderService {
     ];
 
     this.editor = grapesjs.init({
+      i18n: chineseLocale,
       selectorManager: {
         componentFirst: true,
       },
@@ -1414,6 +1417,7 @@ export default class BuilderService {
 
     // Launch GrapesJS with body part
     this.editor = grapesjs.init({
+      i18n: chineseLocale,
       clearOnRender: true,
       container: '.builder-panel',
       components,
@@ -1595,14 +1599,14 @@ export default class BuilderService {
       // columns go into a new category, at the top
       if (block.attributes.id.indexOf('column') !== -1) {
         this.editor.BlockManager.get(block.attributes.id).set('category', {
-          label: 'Sections',
+          label: Mautic.translate('yxhk.ui.9bae918add9affa5'),
           order: -1,
         });
       }
       // 'Blocks' category goes after 'Basic'
       if (block.attributes.category === 'Basic') {
         this.editor.BlockManager.get(block.attributes.id).set('category', {
-          label: 'Basic',
+          label: Mautic.translate('yxhk.ui.0e35f6e9742e074d'),
           order: -1,
         });
       }
