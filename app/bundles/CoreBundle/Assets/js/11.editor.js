@@ -370,7 +370,7 @@ Mautic.GetCkEditorConfigOptions  = function(ckEditorToolbarOptions, tokenCallbac
         const tokens = Mautic.getTokensForPlugIn(tokenCallback);
         mQuery.extend(ckEditorOption, {
             extraPlugins: [Mautic.MentionLinks],
-            dynamicTokenLabel: 'Insert token',
+            dynamicTokenLabel: '插入变量',
             dynamicToken: tokens,
             mention: {
                 feeds: [
