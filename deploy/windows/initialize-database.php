@@ -46,7 +46,8 @@ try {
         'db_password' => $databasePassword,
         'db_table_prefix' => '',
         'secret_key' => bin2hex(random_bytes(32)),
-        'site_url' => $input['site_url'],
+        // Mautic uses site_url as the installed marker, before checking schema.
+        'site_url' => '',
         'cache_path' => $runtime.'/cache',
         'log_path' => $runtime.'/logs',
         'tmp_path' => $runtime.'/tmp',

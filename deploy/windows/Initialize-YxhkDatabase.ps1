@@ -26,36 +26,43 @@ New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 $account = [Security.Principal.WindowsIdentity]::GetCurrent().Name
 & icacls.exe $configDir /inheritance:r /grant:r "${account}:(OI)(CI)(F)" '*S-1-5-18:(OI)(CI)(F)' '*S-1-5-32-544:(OI)(CI)(F)' | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Could not protect private customer configuration' }
-$credential = Get-Credential -UserName 'root' -Message 'YXHK: enter the LOCAL MySQL administrator password. It will not be saved.'
-if (-not $credential) { throw 'Database login cancelled' }
-$payload = @{tenant=$TenantId; user=$credential.UserName; password=$credential.GetNetworkCredential().Password;
-    site_url=$SiteUrl; admin_email=$AdminEmail} | ConvertTo-Json -Compress
 $php = Join-Path $root 'tools\php-8.3.35\php.exe'
-$helper = Join-Path $PSScriptRoot 'initialize-database.php'
-$start = [Diagnostics.ProcessStartInfo]::new()
-$start.FileName = $php
-$start.Arguments = '"' + $helper + '"'
-$start.UseShellExecute = $false
-$start.CreateNoWindow = $true
-$start.RedirectStandardInput = $true
-$start.RedirectStandardOutput = $true
-$start.RedirectStandardError = $true
-$process = [Diagnostics.Process]::Start($start)
-try {
-    $process.StandardInput.WriteLine($payload)
-    $process.StandardInput.Close()
-    $payload = $null
-    $credential = $null
-    $stdout = $process.StandardOutput.ReadToEnd()
-    $stderr = $process.StandardError.ReadToEnd()
-    $process.WaitForExit()
-    if ($process.ExitCode -ne 0) { throw $stderr.Trim() }
-    Write-Output $stdout.Trim()
-} finally { $process.Dispose() }
+if (-not (Test-Path -LiteralPath (Join-Path $configDir 'local.php'))) {
+    $credential = Get-Credential -UserName 'root' -Message 'YXHK: enter the LOCAL MySQL administrator password. It will not be saved.'
+    if (-not $credential) { throw 'Database login cancelled' }
+    $payload = @{tenant=$TenantId; user=$credential.UserName; password=$credential.GetNetworkCredential().Password;
+        site_url=$SiteUrl; admin_email=$AdminEmail} | ConvertTo-Json -Compress
+    $php = Join-Path $root 'tools\php-8.3.35\php.exe'
+    $helper = Join-Path $PSScriptRoot 'initialize-database.php'
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = $php
+    $start.Arguments = '"' + $helper + '"'
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardInput = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $process = [Diagnostics.Process]::Start($start)
+    try {
+        $process.StandardInput.WriteLine($payload)
+        $process.StandardInput.Close()
+        $payload = $null
+        $credential = $null
+        $stdout = $process.StandardOutput.ReadToEnd()
+        $stderr = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0) { throw $stderr.Trim() }
+        Write-Output $stdout.Trim()
+    } finally { $process.Dispose() }
+}
+& $php (Join-Path $PSScriptRoot 'check-database.php') $TenantId prepare
+if ($LASTEXITCODE -ne 0) { throw 'Cannot safely resume database installation' }
 Push-Location $release
 try {
     & $php bin/console mautic:install $SiteUrl --force --no-interaction --env=prod
     if ($LASTEXITCODE -ne 0) { throw 'Mautic installation failed; customer data/configuration preserved for diagnosis' }
+    & $php (Join-Path $PSScriptRoot 'check-database.php') $TenantId verify
+    if ($LASTEXITCODE -ne 0) { throw 'Database schema or administrator is missing' }
     & $php bin/console cache:clear --env=prod --no-interaction
     if ($LASTEXITCODE -ne 0) { throw 'Installed database, but cache rebuild failed' }
 } finally { Pop-Location }
