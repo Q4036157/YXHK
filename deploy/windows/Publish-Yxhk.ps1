@@ -82,6 +82,17 @@ try {
         }
         New-Item -ItemType Junction -Path $link -Target $target | Out-Null
     }
+    # Downloaded language packs persist across releases and remain writable by the customer service.
+    $translations = Join-Path $runtime 'translations'
+    New-Item -ItemType Directory -Force -Path $translations | Out-Null
+    $translationLink = Join-Path $release 'translations'
+    if (Test-Path -LiteralPath $translationLink) {
+        Get-ChildItem -LiteralPath $translationLink -Force | Copy-Item -Destination $translations -Recurse -Force
+        $resolved = [IO.Path]::GetFullPath($translationLink)
+        if (-not $resolved.StartsWith($release + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe translation path' }
+        Remove-Item -LiteralPath $translationLink -Recurse -Force
+    }
+    New-Item -ItemType Junction -Path $translationLink -Target $translations | Out-Null
     $localConfig = (Join-Path $runtime 'config\local.php').Replace('\', '/')
     Write-Utf8 (Join-Path $release 'config\paths_local.php') ("<?php`n" + '$paths[''local_config''] = ''' + $localConfig + "';`n")
     $metadata = [ordered]@{schema_version=1; project='YXHK'; tenant=$TenantId; commit=$commit;
