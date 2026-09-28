@@ -1,0 +1,23 @@
+{
+    auto_https off
+    admin off
+}
+
+http://127.0.0.1:__HTTP_PORT__ {
+    root * "__RELEASE_ROOT__"
+    encode gzip
+    @private path /.git* /.env* /.pxy-* /.ddev* /.github* /.htaccess /config/* /vendor/* /var/* /app/* /bin/* /deploy/* /build/* /tests/* /composer.* /package*.json /webpack* /AGENTS.md
+    @unsafePhp {
+        path_regexp unsafe (?i)\.php(?:/|$)
+        not path /index.php /index.php/*
+    }
+    route {
+        respond @private 404
+        respond @unsafePhp 404
+        php_fastcgi 127.0.0.1:__FASTCGI_PORT__ {
+            env APP_ENV prod
+            env APP_DEBUG 0
+        }
+        file_server
+    }
+}

@@ -29,6 +29,21 @@ arguments or Git. Email delivery is deferred; use `null://null` until configured
 Public domain, PXYLH account handoff and subscriptions are separate integration
 steps. This deployment entry does not implement billing or single sign-on.
 
+After preparation, `Initialize-YxhkDatabase.ps1 -AdminEmail <email>` opens a
+local MySQL credential prompt, creates a fresh customer database/account, and
+installs the schema. Existing customer databases/configuration are never reused
+or overwritten. The generated initial login is saved only in the protected
+customer configuration directory; the database administrator password is not
+saved. If creation fails partway, inspect the new database/account before retrying.
+
+The private OPS repository provides `Install-YxhkServices.ps1`, which needs
+administrator privileges for first installation. It assigns a dedicated Windows
+account to PHP, HTTP and scheduled maintenance. HTTP defaults to loopback 3034,
+FastCGI to loopback 9004. It validates Caddy and requires a login page health
+check; it does not configure public ingress. Email workers and campaign execution
+remain disabled. Future activation/rollback for an already installed service is
+not implemented by this first-install operation.
+
 Before activation, back up the customer database and record the prior release.
 A code rollback cannot reverse a database migration. Preserve runtime data and
 customer configuration during cleanup.
