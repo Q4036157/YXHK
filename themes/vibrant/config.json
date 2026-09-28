@@ -1,8 +1,8 @@
 {
-  "name": "Vibrant",
-  "author": "Mautic",
-  "authorUrl": "http://www.mautic.com",
-  "features": [
-    "email"
-  ]
+    "name": "活力（Vibrant）",
+    "author": "Mautic",
+    "authorUrl": "http://www.mautic.com",
+    "features": [
+        "email"
+    ]
 }

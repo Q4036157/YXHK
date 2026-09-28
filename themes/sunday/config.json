@@ -1,10 +1,10 @@
 {
-  "name": "Sunday",
-  "author": "Mautic team based on a theme by Sendwithus",
-  "authorUrl": "https://www.sendwithus.com/resources/templates/sunday",
-  "features": [
-    "page",
-    "email",
-    "form"
-  ]
+    "name": "星期日（Sunday）",
+    "author": "Mautic 团队，基于 Sendwithus 主题",
+    "authorUrl": "https://www.sendwithus.com/resources/templates/sunday",
+    "features": [
+        "page",
+        "email",
+        "form"
+    ]
 }

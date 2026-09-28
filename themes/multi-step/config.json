@@ -1,8 +1,8 @@
 {
-  "name": "Multi-step",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "features": [
-    "form"
-  ]
+    "name": "分步表单",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "features": [
+        "form"
+    ]
 }

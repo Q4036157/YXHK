@@ -1,15 +1,15 @@
 {
-  "name": "Simple text",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "email"
-  ],
-  "tags": [
-    "adaptative",
-    "newsletter"
-  ]
+    "name": "简洁文本",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "email"
+    ],
+    "tags": [
+        "adaptative",
+        "newsletter"
+    ]
 }

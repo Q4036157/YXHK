@@ -1022,7 +1022,7 @@ export default class BuilderService {
       blockConfig.dynamicToken = [
         {
           id: 'token-tip',
-          name: "Tip: Type '{' directly in the editor to search for tokens!",
+          name: "提示：在编辑器中直接输入 '{' 可搜索变量。",
         },
         ...blockConfig.dynamicToken.filter((t) => t.id !== 'token-tip'),
       ];
@@ -1555,7 +1555,7 @@ export default class BuilderService {
     const noAssetsMessage =
       translatedNoAssets && translatedNoAssets !== noAssetsTranslationKey
         ? translatedNoAssets
-        : 'No assets here, drop files to upload';
+        : '暂无素材，可将文件拖到此处上传';
     const stripHtml = (value) => {
       if (typeof value !== 'string') {
         return '';

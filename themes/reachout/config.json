@@ -1,14 +1,14 @@
 {
-  "name": "ReachOut",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "page"
-  ],
-  "tags": [
-    "contact"
-  ]
+    "name": "主动联系（ReachOut）",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "page"
+    ],
+    "tags": [
+        "contact"
+    ]
 }

@@ -10,3 +10,12 @@ must retain their original spelling. User-created content is not translated.
 The workstation release contains this overlay and activates it with the code.
 Translation services are used only when preparing source text; the deployed
 application has no dependency on an external translation service.
+
+Run `php deploy/windows/localization/verify.php` to check all bundled keys and
+runtime placeholders. The two `localize-system-*.php` commands rename only
+unchanged installation defaults; backups are written to the tenant runtime.
+They are idempotent and do not change role permissions or field identifiers.
+
+The display dictionary also covers built-in package descriptions and PHP info
+labels. Diagnostic configuration names, package identifiers, brands, and values
+remain suitable for copying into support tools.

@@ -1,15 +1,15 @@
 {
-  "name": "Educate",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "email"
-  ],
-  "tags": [
-    "adaptative",
-    "newsletter"
-  ]
+    "name": "知识分享",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "email"
+    ],
+    "tags": [
+        "adaptative",
+        "newsletter"
+    ]
 }

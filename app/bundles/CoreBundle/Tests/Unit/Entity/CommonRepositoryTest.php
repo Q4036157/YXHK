@@ -348,6 +348,19 @@ final class CommonRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(trim($args[0]['val'], '"'), array_shift($parameters));
     }
 
+    public function testNegatedDbalSearchUsesNotLikeWithoutOrmNotExpression(): void
+    {
+        $qb = new \Doctrine\DBAL\Query\QueryBuilder($this->connectionMock);
+        $filter = (object) ['not' => true, 'strict' => false, 'string' => 'needle'];
+        $method = (new \ReflectionClass(CommonRepository::class))->getMethod('addStandardCatchAllWhereClause');
+        [$expression, $parameters] = $method->invokeArgs($this->repo, [&$qb, $filter, ['l.firstname', 'l.lastname']]);
+
+        $this->assertStringContainsString('l.firstname NOT LIKE', (string) $expression);
+        $this->assertStringContainsString(' AND ', (string) $expression);
+        $this->assertStringNotContainsString('NOT(', (string) $expression);
+        $this->assertSame(['%needle%'], array_values($parameters));
+    }
+
     /**
      * @param array<int, mixed> $args
      */

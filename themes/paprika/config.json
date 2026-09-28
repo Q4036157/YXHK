@@ -1,14 +1,14 @@
 {
-  "name": "Paprika",
-  "author": "Mautic team",
-  "authorUrl": "https://mautic.org",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "email"
-  ],
-  "tags": [
-    "newsletter"
-  ]
+    "name": "辣椒（Paprika）",
+    "author": "Mautic 团队",
+    "authorUrl": "https://mautic.org",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "email"
+    ],
+    "tags": [
+        "newsletter"
+    ]
 }

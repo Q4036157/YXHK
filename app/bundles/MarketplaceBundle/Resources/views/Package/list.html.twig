@@ -123,11 +123,11 @@
                                         'package' : item.getPackageName()|escape,
                                     }
                                 ) }}">
-                                {{ item.getHumanPackageName()|escape }}
+                                {{ item.getHumanPackageName()|yxhk_chinese|escape }}
                             </a>
                         </div>
                         {{ include('@MauticCore/Helper/description--inline.html.twig', {
-                            'description': item.description
+                            'description': item.description|yxhk_chinese
                         }) }}
                     </td>
                     <td class="vendor-name">{{ item.getVendorName()|escape }}</td>

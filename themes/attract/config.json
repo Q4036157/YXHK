@@ -1,14 +1,14 @@
 {
-  "name": "Attract",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.com",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "email"
-  ],
-  "tags": [
-    "promotion"
-  ]
+    "name": "访客吸引（Attract）",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.com",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "email"
+    ],
+    "tags": [
+        "promotion"
+    ]
 }

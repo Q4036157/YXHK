@@ -1,8 +1,8 @@
 {
-  "name": "Eclipse",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "features": [
-    "form"
-  ]
+    "name": "日蚀（Eclipse）",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "features": [
+        "form"
+    ]
 }

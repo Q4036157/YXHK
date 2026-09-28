@@ -1,15 +1,15 @@
 {
-  "name": "Gallery",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "email"
-  ],
-  "tags": [
-    "adaptative",
-    "newsletter"
-  ]
+    "name": "图片集",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "email"
+    ],
+    "tags": [
+        "adaptative",
+        "newsletter"
+    ]
 }

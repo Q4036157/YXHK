@@ -367,6 +367,9 @@ class LanguageHelper
 
             $config                            = json_decode(file_get_contents($configFile), true);
             $this->supportedLanguages[$locale] = (!empty($config['name'])) ? $config['name'] : $locale;
+            if (str_starts_with($this->translator->getLocale(), 'zh') && \Symfony\Component\Intl\Locales::exists($locale)) {
+                $this->supportedLanguages[$locale] = \Symfony\Component\Intl\Locales::getName($locale, 'zh');
+            }
         }
     }
 

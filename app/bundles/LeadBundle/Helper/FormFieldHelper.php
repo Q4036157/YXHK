@@ -199,7 +199,7 @@ final class FormFieldHelper extends AbstractFormFieldHelper
      */
     public static function getLocaleChoices(): array
     {
-        return array_flip(Locales::getNames());
+        return array_flip(Locales::getNames('zh'));
     }
 
     /**

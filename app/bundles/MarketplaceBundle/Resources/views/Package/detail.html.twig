@@ -121,9 +121,9 @@
 <div class="col-md-9">
     <div class="marketplace-header {{ packageDetail.packageBase.type|default('')|purify }} bg-picture col-xs-12 jc-center pt-lg pb-lg">
 
-        <h1 class="fw-b fs-46">{{ packageDetail.packageBase.getHumanPackageName()|escape }}</h1>
+        <h1 class="fw-b fs-46">{{ packageDetail.packageBase.getHumanPackageName()|yxhk_chinese|escape }}</h1>
         {% if packageDetail.packageBase.description %}
-            <div class="text-muted mt-sm">{{ packageDetail.packageBase.description|purify }}</div>
+            <div class="text-muted mt-sm">{{ packageDetail.packageBase.description|yxhk_chinese|purify }}</div>
         {% endif %}
         <hr>
         <div class="d-flex gap-3 mt-sm">
@@ -313,14 +313,14 @@
 
 {{- include('@MauticCore/Helper/modal.html.twig', {
     'id'            : 'InstallationInProgressModal',
-    'header'        : 'Installing ' ~ packageDetail.packageBase.getHumanPackageName()|escape,
+    'header'        : '正在安装 ' ~ packageDetail.packageBase.getHumanPackageName()|yxhk_chinese|escape,
     'size'          : 'md',
     'footerButtons' : false,
 }) -}}
 
 {{- include('@MauticCore/Helper/modal.html.twig', {
     'id'            : 'RemovalInProgressModal',
-    'header'        : 'Removing ' ~ packageDetail.packageBase.getHumanPackageName()|escape,
+    'header'        : '正在移除 ' ~ packageDetail.packageBase.getHumanPackageName()|yxhk_chinese|escape,
     'size'          : 'md',
     'footerButtons' : false,
 }) -}}

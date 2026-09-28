@@ -1,14 +1,14 @@
 {
-  "name": "Capture",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "page"
-  ],
-  "tags": [
-    "contact"
-  ]
+    "name": "线索采集（Capture）",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "page"
+    ],
+    "tags": [
+        "contact"
+    ]
 }

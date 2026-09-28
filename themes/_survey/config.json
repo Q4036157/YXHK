@@ -1,15 +1,15 @@
 {
-  "name": "Survey",
-  "author": "Dropsolid",
-  "authorUrl": "https://dropsolid.io",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "email"
-  ],
-  "tags": [
-    "adaptative",
-    "newsletter"
-  ]
+    "name": "问卷调查",
+    "author": "Dropsolid",
+    "authorUrl": "https://dropsolid.io",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "email"
+    ],
+    "tags": [
+        "adaptative",
+        "newsletter"
+    ]
 }

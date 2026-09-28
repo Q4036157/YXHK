@@ -1,9 +1,9 @@
 {
-  "name": "Oxygen",
-  "author": "Mautic team based on a theme by Sendwithus",
-  "authorUrl": "https://www.sendwithus.com/resources/templates/oxygen",
-  "features": [
-    "page",
-    "email"
-  ]
+    "name": "氧气（Oxygen）",
+    "author": "Mautic 团队，基于 Sendwithus 主题",
+    "authorUrl": "https://www.sendwithus.com/resources/templates/oxygen",
+    "features": [
+        "page",
+        "email"
+    ]
 }

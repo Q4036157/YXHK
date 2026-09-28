@@ -1,14 +1,14 @@
 {
-  "name": "Confirm Me",
-  "author": "Mautic team",
-  "authorUrl": "https://mautic.org",
-  "builder": [
-    "grapesjsbuilder"
-  ],
-  "features": [
-    "email"
-  ],
-  "tags": [
-    "transactional"
-  ]
+    "name": "确认订阅",
+    "author": "Mautic 团队",
+    "authorUrl": "https://mautic.org",
+    "builder": [
+        "grapesjsbuilder"
+    ],
+    "features": [
+        "email"
+    ],
+    "tags": [
+        "transactional"
+    ]
 }

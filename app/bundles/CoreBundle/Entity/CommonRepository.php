@@ -1181,7 +1181,7 @@ class CommonRepository extends ServiceEntityRepository
             );
         }
 
-        if ($filter->not) {
+        if ($filter->not && $ormQb) {
             $expr = $q->expr()->not($expr);
         }
 
