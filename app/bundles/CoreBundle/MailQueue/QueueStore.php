@@ -29,20 +29,28 @@ final class QueueStore
         return is_file($file) ? json_decode(file_get_contents($file), true, 512, JSON_THROW_ON_ERROR) : [];
     }
 
-    public function saveProfiles(array $profiles): void
+    public function updateProfile(string $id, callable $update): void
     {
-        $this->transaction(function (array &$state) use ($profiles): void {
-            if (array_filter($state['jobs'], fn ($job) => 'running' === $job['status'])) {
-                throw new \RuntimeException('请先暂停正在运行的批次，再修改发件账号。');
+        $this->transaction(function (array &$state) use ($id, $update): void {
+            foreach ($state['jobs'] as $job) {
+                if ('running' === $job['status'] || in_array('sending', array_column($job['recipients'], 'status'), true)) {
+                    throw new \RuntimeException('请先暂停批次，并等待正在投递的一封结束，再修改发件账号。');
+                }
             }
+            $profiles = $this->profiles();
+            $profiles[$id] = $update($profiles[$id] ?? []);
             $this->write($this->directory().'/profiles.json', $profiles);
         });
     }
 
-    public function saveRefreshedProfiles(array $profiles): void
+    public function refreshToken(string $id, string $previous, string $refreshed): void
     {
-        $this->transaction(function (array &$state) use ($profiles): void {
-            $this->write($this->directory().'/profiles.json', $profiles);
+        $this->transaction(function (array &$state) use ($id, $previous, $refreshed): void {
+            $profiles = $this->profiles();
+            if (($profiles[$id]['oauth_refresh_token'] ?? null) === $previous) {
+                $profiles[$id]['oauth_refresh_token'] = $refreshed;
+                $this->write($this->directory().'/profiles.json', $profiles);
+            }
         });
     }
 

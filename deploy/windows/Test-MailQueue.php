@@ -4,17 +4,65 @@ declare(strict_types=1);
 
 // This focused regression test needs no database or SMTP credentials.
 $root = dirname(__DIR__, 2);
-foreach (['CsvRecipients', 'QueueSchedule'] as $class) {
+require_once $root.'/app/bundles/CoreBundle/Helper/PathsHelper.php';
+foreach (['CsvRecipients', 'QueueSchedule', 'QueueStore'] as $class) {
     require_once $root.'/app/bundles/CoreBundle/MailQueue/'.$class.'.php';
 }
 use Mautic\CoreBundle\MailQueue\CsvRecipients;
 use Mautic\CoreBundle\MailQueue\QueueSchedule;
+use Mautic\CoreBundle\MailQueue\QueueStore;
 
 function check(bool $condition, string $label): void
 {
     if (!$condition) {
         throw new RuntimeException($label);
     }
+}
+
+$directory = sys_get_temp_dir().'/yxhk-store-'.bin2hex(random_bytes(8));
+$paths = new class($directory) extends \Mautic\CoreBundle\Helper\PathsHelper {
+    public function __construct(private readonly string $directory)
+    {
+    }
+
+    public function getLocalConfigurationFile(): string
+    {
+        return $this->directory.'/config/local.php';
+    }
+};
+$store = new QueueStore($paths);
+try {
+    $store->updateProfile('first', fn (array $profile) => ['label' => 'First', 'oauth_refresh_token' => 'old']);
+    $store->updateProfile('second', fn (array $profile) => ['label' => 'Second']);
+    $store->refreshToken('first', 'old', 'new');
+    check('new' === $store->profiles()['first']['oauth_refresh_token'], 'Refresh current token');
+    check('Second' === $store->profiles()['second']['label'], 'Refresh preserves other accounts');
+    $store->refreshToken('first', 'old', 'stale');
+    check('new' === $store->profiles()['first']['oauth_refresh_token'], 'Ignore stale token refresh');
+    foreach (['running', 'paused', 'stopped'] as $status) {
+        $store->transaction(function (array &$state) use ($status): void {
+            $state['jobs'] = ['test' => ['status' => $status, 'recipients' => [['status' => 'sending']]]];
+        });
+        $blocked = false;
+        try {
+            $store->updateProfile('second', fn (array $profile) => ['label' => 'Changed']);
+        } catch (RuntimeException) {
+            $blocked = true;
+        }
+        check($blocked && 'Second' === $store->profiles()['second']['label'], 'Block account changes during delivery');
+    }
+    $store->transaction(function (array &$state): void {
+        $state['jobs']['test']['recipients'][0]['status'] = 'sent';
+    });
+    $store->updateProfile('second', fn (array $profile) => array_replace($profile, ['label' => 'Changed']));
+    check('Changed' === $store->profiles()['second']['label'], 'Allow edit after delivery finishes');
+    echo "PASS: atomic account edits, current-token refresh, stale-refresh protection, in-flight edit guard.\n";
+} finally {
+    foreach (glob($directory.'/mail-queue/*') ?: [] as $file) {
+        unlink($file);
+    }
+    rmdir($directory.'/mail-queue');
+    rmdir($directory);
 }
 
 $file = tempnam(sys_get_temp_dir(), 'yxhk-queue-');

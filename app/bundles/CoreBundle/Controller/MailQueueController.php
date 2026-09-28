@@ -49,34 +49,35 @@ final class MailQueueController extends AbstractController
                     if (!isset($defaults[$type])) {
                         throw new \InvalidArgumentException('邮箱类型无效。');
                     }
-                    $profile = $profiles[$id] ?? [];
-                    $profile['type'] = $type;
-                    $profile['label'] = mb_substr(trim($request->request->getString('label')), 0, 100);
-                    $profile['host'] = trim($request->request->getString('host')) ?: $defaults[$type][0];
-                    $profile['port'] = $request->request->getInt('port') ?: $defaults[$type][1];
-                    $profile['security'] = $request->request->getString('security');
-                    $profile['username'] = trim($request->request->getString('username'));
-                    $profile['from'] = trim($request->request->getString('from'));
-                    $profile['name'] = trim($request->request->getString('name'));
-                    $profile['auth'] = $request->request->getString('auth', 'password');
-                    $profile['enabled'] = $request->request->getBoolean('enabled');
-                    foreach (['password', 'oauth_client_id', 'oauth_client_secret', 'oauth_refresh_token'] as $secret) {
-                        $value = trim($request->request->getString($secret));
-                        if ('' !== $value) {
-                            $profile[$secret] = $value;
+                    $store->updateProfile($id, function (array $profile) use ($request, $type, $defaults): array {
+                        $profile['type'] = $type;
+                        $profile['label'] = mb_substr(trim($request->request->getString('label')), 0, 100);
+                        $profile['host'] = trim($request->request->getString('host')) ?: $defaults[$type][0];
+                        $profile['port'] = $request->request->getInt('port') ?: $defaults[$type][1];
+                        $profile['security'] = $request->request->getString('security');
+                        $profile['username'] = trim($request->request->getString('username'));
+                        $profile['from'] = trim($request->request->getString('from'));
+                        $profile['name'] = trim($request->request->getString('name'));
+                        $profile['auth'] = $request->request->getString('auth', 'password');
+                        $profile['enabled'] = $request->request->getBoolean('enabled');
+                        foreach (['password', 'oauth_client_id', 'oauth_client_secret', 'oauth_refresh_token'] as $secret) {
+                            $value = trim($request->request->getString($secret));
+                            if ('' !== $value) {
+                                $profile[$secret] = $value;
+                            }
                         }
-                    }
-                    if (!preg_match('/^[a-zA-Z0-9.-]+$/D', $profile['host']) || $profile['port'] < 1 || $profile['port'] > 65535
-                        || !in_array($profile['security'], ['smtps', 'starttls'], true)
-                        || !in_array($profile['auth'], ['password', 'oauth2'], true)
-                        || false === filter_var($profile['from'], FILTER_VALIDATE_EMAIL)) {
-                        throw new \InvalidArgumentException('请检查 SMTP 主机、端口、加密方式和发件地址。');
-                    }
-                    if ($profile['enabled'] && !QueueTransport::configured($profile)) {
-                        throw new \InvalidArgumentException('启用前需要填写完整的授权信息。');
-                    }
-                    $profiles[$id] = $profile;
-                    $store->saveProfiles($profiles);
+                        if (!preg_match('/^[a-zA-Z0-9.-]+$/D', $profile['host']) || $profile['port'] < 1 || $profile['port'] > 65535
+                            || !in_array($profile['security'], ['smtps', 'starttls'], true)
+                            || !in_array($profile['auth'], ['password', 'oauth2'], true)
+                            || false === filter_var($profile['from'], FILTER_VALIDATE_EMAIL)) {
+                            throw new \InvalidArgumentException('请检查 SMTP 主机、端口、加密方式和发件地址。');
+                        }
+                        if ($profile['enabled'] && !QueueTransport::configured($profile)) {
+                            throw new \InvalidArgumentException('启用前需要填写完整的授权信息。');
+                        }
+
+                        return $profile;
+                    });
                     $notice[] = '发件账号已保存。授权码留空时保留原值。';
                 } elseif ('create' === $action) {
                     $upload = $request->files->get('csv');

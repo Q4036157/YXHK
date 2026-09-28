@@ -106,9 +106,7 @@ final class QueueTransport implements TransportInterface
             throw new TransportException('OAuth 授权刷新失败，请重新授权该邮箱。');
         }
         if (!empty($tokens['refresh_token']) && $tokens['refresh_token'] !== $profile['oauth_refresh_token']) {
-            $profiles = $this->store->profiles();
-            $profiles[$id]['oauth_refresh_token'] = $tokens['refresh_token'];
-            $this->store->saveRefreshedProfiles($profiles);
+            $this->store->refreshToken($id, $profile['oauth_refresh_token'], $tokens['refresh_token']);
         }
 
         return $tokens['access_token'];
