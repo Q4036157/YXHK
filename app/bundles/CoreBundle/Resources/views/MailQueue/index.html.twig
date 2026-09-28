@@ -1,0 +1,52 @@
+{% extends '@MauticCore/Default/content.html.twig' %}
+{% block headerTitle %}邮件发送队列{% endblock %}
+{% block pageTitle %}邮件发送队列{% endblock %}
+{% block content %}
+{% set token = csrf_token('yxhk_queue') %}
+{% set types = {'qq':'QQ 邮箱', 'google':'谷歌邮箱', '163':'163 邮箱', '126':'126 邮箱', 'outlook':'Outlook'} %}
+{% set statuses = {'paused':'已暂停','running':'发送中','completed':'已完成','stopped':'已停止','pending':'待发送','sending':'投递中','sent':'SMTP 已接收','skipped':'已跳过','failed':'发送失败','uncertain':'待核对'} %}
+<div class="pa-lg">
+{% for message in notice %}<div class="alert alert-info">{{ message }}</div>{% endfor %}
+<div class="panel panel-default"><div class="panel-body">
+<h3>发送节奏</h3>
+<p>按本批选中的账号顺序轮询，每次只发送一封。20 秒间隔约为每分钟 3 封；60 秒间隔约为每分钟 1 封。暂停不会撤回已投递的邮件。</p>
+<p>后台进程：<strong>{{ online ? '在线' : '未运行或正在启动' }}</strong></p>
+<form method="post" action="{{ path('yxhk_mail_queue') }}">
+<input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="settings">
+<label>每封间隔（秒） <input name="interval" type="number" min="1" max="86400" required value="{{ state.interval }}"></label>
+<button class="btn btn-primary" type="submit">保存间隔</button></form>
+</div></div>
+<div class="panel panel-default"><div class="panel-body"><h3>发件账号</h3>
+<p>每种邮箱都可添加多个账号。新账号保存后，在创建批次时选择参与轮询的账号。编辑授权码留空会保留原值。</p>
+{% for id, profile in profiles %}
+<details class="mb-md"><summary>{{ profile.label|default(types[profile.type]) }} · {{ profile.from }} · {{ profile.configured ? '已启用' : '未启用 / 待配置' }}</summary>
+{% include '@MauticCore/MailQueue/profile.html.twig' with {id:id, profile:profile} %}
+</details>
+{% endfor %}
+<details><summary>添加发件账号</summary>{% include '@MauticCore/MailQueue/profile.html.twig' with {id:'', profile:{}} %}</details>
+</div></div>
+<div class="panel panel-default"><div class="panel-body"><h3>上传 CSV 并选择邮件模板</h3>
+<p>使用 UTF-8 CSV，至少包含 email 列。自动排除群主、管理员及重复、格式无效的邮箱。模板在“渠道 → 电子邮件”中编辑，创建批次后修改正文需要重新创建批次。</p>
+<form method="post" enctype="multipart/form-data" action="{{ path('yxhk_mail_queue') }}">
+<input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="create">
+<div class="form-group"><label>批次名称</label><input class="form-control" name="name" required maxlength="100" placeholder="例如：API 体验邀请首批"></div>
+<div class="form-group"><label>邮件模板</label><select class="form-control" name="email_id" required><option value="">请选择已保存的邮件</option>{% for email in emails %}<option value="{{ email.id }}">{{ email.name }} · {{ email.subject }}</option>{% endfor %}</select></div>
+<div class="form-group"><label>CSV 文件</label><input type="file" name="csv" accept=".csv,text/csv" required></div>
+<div class="form-group"><label>本批最多发送人数</label><input name="limit" type="number" value="10" min="1" max="20000" required></div>
+<div class="form-group"><label>参与轮询的账号（按以下顺序）</label>{% for id, profile in profiles %}<div><label><input type="checkbox" name="senders[]" value="{{ id }}" {{ profile.configured ? 'checked' : 'disabled' }}> {{ profile.label|default(profile.from) }} · {{ profile.from }}</label></div>{% else %}<p>请先添加发件账号。</p>{% endfor %}</div>
+<p><label><input type="checkbox" name="confirmed" value="1" required> 我已确认本批收件名单、接收意愿和邮件正文。</label></p>
+<button class="btn btn-primary" type="submit">创建待发送批次</button>
+</form></div></div>
+<h3>发送批次</h3>
+{% for job in jobs %}<div class="panel panel-default"><div class="panel-body"><h4>{{ job.name }} · {{ statuses[job.status] }}</h4>
+<p>主题：{{ job.subject }} · 共 {{ job.total }} 人 · 已接收 {{ job.progress.sent|default(0) }} · 跳过 {{ job.progress.skipped|default(0) }} · 失败 {{ job.progress.failed|default(0) }} · 待核对 {{ job.progress.uncertain|default(0) }}</p>
+<p>CSV 原始 {{ job.counts.total }} 条；排除管理账号 {{ job.counts.excluded }} 条；无效 {{ job.counts.invalid }} 条；重复 {{ job.counts.duplicates }} 条。</p>
+{% if job.error %}<p class="text-danger">{{ job.error }}</p>{% endif %}
+<form method="post" action="{{ path('yxhk_mail_queue') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="job_id" value="{{ job.id }}">
+{% if job.status == 'paused' %}<button class="btn btn-primary" name="action" value="start">开始 / 继续</button>{% endif %}
+{% if job.status == 'running' %}<button class="btn btn-default" name="action" value="pause">暂停</button>{% endif %}
+{% if job.status in ['paused','running'] %}<button class="btn btn-default" name="action" value="stop">停止此批次</button>{% endif %}</form>
+<details><summary>查看前 10 条收件记录</summary><table class="table"><thead><tr><th>邮箱</th><th>状态</th><th>发件账号</th></tr></thead><tbody>{% for recipient in job.preview %}<tr><td>{{ recipient.email }}</td><td>{{ statuses[recipient.status] }}</td><td>{{ profiles[recipient.sender|default('')].label|default(recipient.sender|default('待分配')) }}</td></tr>{% endfor %}</tbody></table></details>
+</div></div>{% else %}<p>暂无批次。上传 CSV 后先核对名单，再启动发送。</p>{% endfor %}
+</div>
+{% endblock %}

@@ -5,6 +5,10 @@ declare(strict_types=1);
 return [
     'routes' => [
         'main' => [
+            'yxhk_mail_queue' => [
+                'path' => '/mail-queue',
+                'controller' => 'Mautic\\CoreBundle\\Controller\\MailQueueController::indexAction',
+            ],
             'mautic_core_ajax' => [
                 'path'       => '/ajax',
                 'controller' => 'Mautic\CoreBundle\Controller\AjaxController::delegateAjaxAction',
@@ -111,6 +115,13 @@ return [
     ],
     'menu' => [
         'main' => [
+            '邮件发送队列' => [
+                'id' => 'yxhk_mail_queue',
+                'route' => 'yxhk_mail_queue',
+                'iconClass' => 'ri-mail-send-line',
+                'priority' => 39,
+                'access' => 'admin',
+            ],
             'mautic.core.components' => [
                 'id'        => 'mautic_components_root',
                 'iconClass' => 'ri-archive-2-fill',

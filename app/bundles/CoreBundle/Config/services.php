@@ -54,6 +54,9 @@ return function (ContainerConfigurator $configurator): void {
 
     $services->load('Mautic\\CoreBundle\\Entity\\', '../Entity/*Repository.php');
 
+    $services->set(Mautic\CoreBundle\MailQueue\QueueTransportFactory::class)
+        ->autoconfigure(false)->tag('mailer.transport_factory');
+
     $services->set('mautic.helper.core_parameters', Mautic\CoreBundle\Helper\CoreParametersHelper::class)->tag('twig.helper');
 
     $services->alias(Mautic\CoreBundle\Helper\CoreParametersHelper::class, 'mautic.helper.core_parameters');

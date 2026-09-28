@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Mautic\CoreBundle\MailQueue;
+
+use Symfony\Component\Mailer\Transport\AbstractTransportFactory;
+use Symfony\Component\Mailer\Transport\Dsn;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+
+final class QueueTransportFactory extends AbstractTransportFactory
+{
+    public function __construct(private readonly QueueStore $store, private readonly SenderContext $context)
+    {
+        parent::__construct();
+    }
+
+    public function create(Dsn $dsn): TransportInterface
+    {
+        return new QueueTransport($this->store, $this->context);
+    }
+
+    protected function getSupportedSchemes(): array
+    {
+        return ['yxhk'];
+    }
+}
