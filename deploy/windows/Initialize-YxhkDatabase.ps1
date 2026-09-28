@@ -5,6 +5,14 @@ param(
     [Parameter(Mandatory=$true)][string]$AdminEmail
 )
 $ErrorActionPreference = 'Stop'
+if ($PSVersionTable.PSEdition -eq 'Desktop') {
+    # Start-Process can inherit PowerShell 7 modules into Windows PowerShell 5.1.
+    $windowsModules = [IO.Path]::Combine($PSHOME, 'Modules')
+    $programModules = [IO.Path]::Combine([Environment]::GetFolderPath('ProgramFiles'), 'WindowsPowerShell\Modules')
+    $userModules = [IO.Path]::Combine([Environment]::GetFolderPath('MyDocuments'), 'WindowsPowerShell\Modules')
+    $env:PSModulePath = $windowsModules + ';' + $programModules + ';' + $userModules
+    Import-Module ([IO.Path]::Combine($windowsModules, 'Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1')) -ErrorAction Stop
+}
 $uri = [Uri]$SiteUrl
 if (-not $uri.IsAbsoluteUri -or $uri.Scheme -notin @('http', 'https') -or $uri.UserInfo) { throw 'Invalid site URL' }
 if ($AdminEmail -notmatch '^[^\s@]+@[^\s@]+\.[^\s@]+$') { throw 'Invalid administrator email' }
