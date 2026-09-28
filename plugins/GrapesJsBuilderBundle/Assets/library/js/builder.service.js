@@ -1,5 +1,5 @@
 import grapesjs from 'grapesjs';
-import chineseLocale from './locale.zh';
+import chineseLocale, { localizeEditorLabels } from './locale.zh';
 import grapesjsmjml from 'grapesjs-mjml';
 import grapesjsnewsletter from 'grapesjs-preset-newsletter';
 import grapesjswebpage from 'grapesjs-preset-webpage';
@@ -787,10 +787,13 @@ export default class BuilderService {
     }
 
     this.editor.on('load', () => {
+      localizeEditorLabels(this.editor);
       if (!this.editorStateLoaded && this.pendingEditorState) {
         this.loadEditorState(this.pendingEditorState);
       }
     });
+
+    this.editor.on('component:selected', () => localizeEditorLabels(this.editor));
 
     if (typeof editorStatePrefetch?.then === 'function') {
       editorStatePrefetch.then((editorState) => {

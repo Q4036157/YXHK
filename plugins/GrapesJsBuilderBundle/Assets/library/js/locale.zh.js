@@ -77,10 +77,50 @@ const cssOptions = {
   'flex-start': '起始端', 'flex-end': '末端', 'space-between': '两端分布',
   'space-around': '均匀分布', 'space-evenly': '等距分布',
   'border-box': '包含边框', 'content-box': '内容尺寸',
+  middle: '居中', '100': '极细', '200': '特细', '300': '细体',
+  '400': '正常', '500': '中等', '600': '半粗', '700': '粗体',
+  '800': '特粗', '900': '极粗',
 };
 zh.styleManager.options = Object.fromEntries(
   Object.keys(zh.styleManager.properties).map(property => [property, cssOptions]),
 );
+
+const internalLabels = {
+  Top: '顶部', Right: '右侧', Bottom: '底部', Left: '左侧',
+  'Icon size': '图标尺寸', Align: '对齐', 'Background color': '背景颜色',
+  'Background url': '背景图片地址', 'Border width': '边框宽度',
+  'Border style': '边框样式', 'Border color': '边框颜色', 'Border detached': '分边边框',
+  Thin: '极细', 'Extra-Light': '特细', Light: '细体', Normal: '正常',
+  Medium: '中等', 'Semi-Bold': '半粗', Bold: '粗体', 'Extra-Bold': '特粗',
+  'Ultra-Bold': '极粗', 'This window': '当前窗口', 'New window': '新窗口',
+};
+
+// Some plugins define nested labels directly instead of consulting i18n.
+export function localizeEditorLabels(editor) {
+  const label = value => internalLabels[value] || cssOptions[value] || value;
+  const localizeModel = model => {
+    const name = model.get('name') || model.getName?.();
+    if (name && label(name) !== name) model.set('name', label(name));
+    const title = model.get('label');
+    if (title && label(title) !== title) model.set('label', label(title));
+    for (const key of ['options', 'list']) {
+      const options = model.get(key);
+      if (Array.isArray(options)) {
+        model.set(key, options.map(option => typeof option === 'object'
+          ? { ...option, label: label(option.label || option.name || option.id || option.value) }
+          : option));
+      }
+    }
+    model.get('properties')?.each?.(localizeModel);
+  };
+  editor.StyleManager.getSectors().each(sector => sector.get('properties').each(localizeModel));
+  editor.getSelected()?.getTraits?.().forEach(localizeModel);
+  const devices = editor.Panels.getPanel('devices-c')?.get('buttons');
+  devices?.each((button, index) => {
+    const title = ['桌面视图', '平板视图', '手机视图'][index];
+    if (title) button.set('attributes', { ...button.get('attributes'), title });
+  });
+}
 
 export default {
   locale: 'zh',
