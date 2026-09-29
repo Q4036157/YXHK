@@ -11,6 +11,11 @@
 <h3>发送节奏</h3>
 <p>按本批选中的账号顺序轮询，每次只发送一封。20 秒间隔约为每分钟 3 封；60 秒间隔约为每分钟 1 封。暂停不会撤回已投递的邮件。</p>
 <p>后台进程：<strong>{{ online ? '在线' : '未运行或正在启动' }}</strong></p>
+{% if state.unsubscribe_sync is defined %}
+<p>204 退订同步：<strong>{{ state.unsubscribe_sync.status == 'ok' ? '连接正常' : '同步失败' }}</strong>
+ · 最近检查 {{ state.unsubscribe_sync.time|date('Y-m-d H:i:s') }}</p>
+{% if state.unsubscribe_sync.error %}<div class="alert alert-danger">{{ state.unsubscribe_sync.error }}</div>{% endif %}
+{% else %}<p>204 退订服务：等待后台连接。未配置或无法确认退订状态时，营销批次不会投递。</p>{% endif %}
 <form method="post" action="{{ path('yxhk_mail_queue') }}">
 <input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="settings">
 <label>每封间隔（秒） <input name="interval" type="number" min="1" max="86400" required value="{{ state.interval }}"></label>

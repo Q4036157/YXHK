@@ -8,4 +8,8 @@ final class SenderContext
 {
     public ?string $profile = null;
     public int $accepted = 0;
+    public ?string $recipient = null;
+    public ?string $unsubscribeUrl = null;
+    public bool $unsubscribed = false;
+    public bool $unsubscribeUnavailable = false;
 }

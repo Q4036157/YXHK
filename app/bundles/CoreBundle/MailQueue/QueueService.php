@@ -18,6 +18,8 @@ final class QueueService
         private readonly ManagerRegistry $doctrine,
         private readonly EmailModel $emails,
         private readonly LeadModel $leads,
+        private readonly UnsubscribeClient $unsubscribe,
+        private readonly UnsubscribeSync $unsubscribeSync,
     ) {
     }
 
@@ -96,6 +98,9 @@ final class QueueService
 
     public function tick(int $now): void
     {
+        if (!$this->unsubscribeSync->tick($now)) {
+            return;
+        }
         $task = $this->store->transaction(function (array &$state) use ($now): ?array {
             return QueueSchedule::claim($state, $now);
         });
@@ -106,6 +111,10 @@ final class QueueService
         $error = '';
         $this->context->profile = $task['sender'];
         $this->context->accepted = 0;
+        $this->context->recipient = $task['recipient']['email'];
+        $this->context->unsubscribeUrl = null;
+        $this->context->unsubscribed = false;
+        $this->context->unsubscribeUnavailable = false;
         try {
             // MySQL can expire connections while this worker is idle.
             foreach ($this->doctrine->getConnections() as $connection) {
@@ -134,21 +143,41 @@ final class QueueService
             if ([] !== $dnc) {
                 $status = 'skipped';
             } else {
-                $profile = $lead->getProfileFields();
-                $profile['id'] = $lead->getId();
-                $profile['email'] = $lead->getEmail();
-                $success = $this->emails->sendEmail($email, $profile, ['allowResends' => false, 'ignoreDNC' => false, 'dnc_as_error' => true]);
-                if (true === $success && 1 === $this->context->accepted) {
-                    $status = 'sent';
-                } elseif (0 === $this->context->accepted && true === $success) {
+                $prepared = $this->unsubscribe->prepare($lead->getEmail());
+                if ($prepared['blocked']) {
+                    $this->unsubscribeSync->block($lead->getEmail());
                     $status = 'skipped';
                 } else {
-                    throw new \RuntimeException('SMTP 未确认接收邮件，批次已暂停。请核对发送账号和原生日志。');
+                    $this->context->unsubscribeUrl = $prepared['url'];
+                    $profile = $lead->getProfileFields();
+                    $profile['id'] = $lead->getId();
+                    $profile['email'] = $lead->getEmail();
+                    $success = $this->emails->sendEmail($email, $profile, ['allowResends' => false, 'ignoreDNC' => false, 'dnc_as_error' => true]);
+                    if ($this->context->unsubscribeUnavailable) {
+                        throw new UnsubscribeUnavailable('204 退订检查失败，批次已暂停；连接恢复后可继续。');
+                    }
+                    if ($this->context->unsubscribed) {
+                        $this->unsubscribeSync->block($lead->getEmail());
+                        $status = 'skipped';
+                    } elseif (true === $success && 1 === $this->context->accepted) {
+                        $status = 'sent';
+                    } elseif (0 === $this->context->accepted && true === $success) {
+                        $status = 'skipped';
+                    } else {
+                        throw new \RuntimeException('SMTP 未确认接收邮件，批次已暂停。请核对发送账号和原生日志。');
+                    }
                 }
             }
+        } catch (UnsubscribeUnavailable $exception) {
+            $status = 'pending';
+            $error = $exception->getMessage();
         } catch (\Throwable $exception) {
             $error = '发送处理失败，请检查模板、SMTP 授权和配额。不会自动重发此条记录。';
             $status = $this->context->accepted > 0 ? 'uncertain' : 'failed';
+            if ($this->context->unsubscribeUnavailable && 0 === $this->context->accepted) {
+                $status = 'pending';
+                $error = '204 退订检查失败，批次已暂停；连接恢复后可继续。';
+            }
         } finally {
             $this->context->profile = null;
         }
@@ -157,7 +186,7 @@ final class QueueService
             $recipient = &$job['recipients'][$task['index']];
             $recipient['status'] = $status;
             $recipient['finished'] = time();
-            if (in_array($status, ['failed', 'uncertain'], true)) {
+            if (in_array($status, ['failed', 'uncertain', 'pending'], true)) {
                 $job['status'] = 'paused';
                 $job['error'] = $error;
             } elseif (!array_filter($job['recipients'], fn ($r) => in_array($r['status'], ['pending', 'sending'], true))) {
@@ -165,5 +194,7 @@ final class QueueService
             }
         });
         $this->doctrine->getManager()->clear();
+        $this->context->recipient = null;
+        $this->context->unsubscribeUrl = null;
     }
 }

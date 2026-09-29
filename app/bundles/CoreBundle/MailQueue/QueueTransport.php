@@ -16,7 +16,8 @@ use Symfony\Component\Mime\RawMessage;
 
 final class QueueTransport implements TransportInterface
 {
-    public function __construct(private readonly QueueStore $store, private readonly SenderContext $context)
+    public function __construct(private readonly QueueStore $store, private readonly SenderContext $context,
+        private readonly UnsubscribeClient $unsubscribe)
     {
     }
 
@@ -56,6 +57,37 @@ final class QueueTransport implements TransportInterface
             throw new TransportException('发件账号尚未配置，或邮件格式不支持。');
         }
         $message = clone $message;
+        if (null !== $this->context->recipient) {
+            // 在连接 SMTP 之前最后检查，所有轮询账号执行同一条规则。
+            try {
+                $blocked = $this->unsubscribe->blocked($this->context->recipient);
+            } catch (UnsubscribeUnavailable $exception) {
+                $this->context->unsubscribeUnavailable = true;
+                throw $exception;
+            }
+            if ($blocked) {
+                $this->context->unsubscribed = true;
+
+                return null;
+            }
+            $url = $this->context->unsubscribeUrl;
+            if (null === $url) {
+                throw new UnsubscribeUnavailable('未生成公开退订链接，批次已暂停。');
+            }
+            $headers = $message->getHeaders();
+            $headers->removeAll('List-Unsubscribe');
+            $headers->removeAll('List-Unsubscribe-Post');
+            $headers->addTextHeader('List-Unsubscribe', '<'.$url.'>');
+            $headers->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+            $html = $message->getHtmlBody();
+            if (null !== $html && !str_contains($html, $url)) {
+                $message->html($html.'<p><a href="'.htmlspecialchars($url, ENT_QUOTES).'">退订营销邮件</a></p>');
+            }
+            $text = $message->getTextBody();
+            if (null !== $text && !str_contains($text, $url)) {
+                $message->text($text."\n\n退订营销邮件：".$url);
+            }
+        }
         $sender = new Address($profile['from'], $profile['name'] ?? '');
         $message->from($sender)->sender($sender)->returnPath($sender)->replyTo($sender);
         $envelope = new Envelope($sender, ($envelope ?? Envelope::create($message))->getRecipients());
