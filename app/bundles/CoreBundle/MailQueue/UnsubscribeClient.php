@@ -29,6 +29,8 @@ final class UnsubscribeClient
             $curl = curl_init($base.$path);
             try {
                 curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 3, CURLOPT_TIMEOUT => 5,
+                    // 内部 Tailscale 请求不经过系统 HTTP 代理。
+                    CURLOPT_PROXY => '',
                     CURLOPT_HTTPHEADER => ['Authorization: Bearer '.$config['api_key'], 'Content-Type: application/json'],
                     CURLOPT_FOLLOWLOCATION => false]);
                 if (null !== $body) {
