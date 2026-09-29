@@ -82,15 +82,15 @@ final class MailQueueController extends AbstractController
                 } elseif ('create' === $action) {
                     $upload = $request->files->get('csv');
                     if (!$upload instanceof \Symfony\Component\HttpFoundation\File\UploadedFile || !$upload->isValid()) {
-                        throw new \InvalidArgumentException('请选择有效的 CSV 文件。');
+                        throw new \InvalidArgumentException('请选择有效的 CSV 或 TXT 文件。');
                     }
                     if (!$request->request->getBoolean('confirmed')) {
                         throw new \InvalidArgumentException('请先确认本批名单和邮件正文。');
                     }
-                    $import = CsvRecipients::read($upload->getPathname(), $request->request->getInt('limit', 10));
-                    $queue->create(trim($request->request->getString('name')) ?: 'CSV 邮件批次',
+                    $import = CsvRecipients::read($upload->getPathname(), $request->request->getInt('limit', 10), strtolower($upload->getClientOriginalExtension()));
+                    $queue->create(trim($request->request->getString('name')) ?: '邮件批次',
                         $request->request->getInt('email_id'), $import, $request->request->all('senders'), $this->getUser()->getId());
-                    $notice[] = 'CSV 已清理并创建暂停批次，请检查名单后点击开始。';
+                    $notice[] = '名单已清理并创建暂停批次，请检查名单后点击开始。';
                 } elseif (in_array($action, ['start', 'pause', 'stop'], true)) {
                     $queue->action($request->request->getString('job_id'), $action);
                     $notice[] = '队列状态已更新；已进入 SMTP 的一封可能仍会完成。';

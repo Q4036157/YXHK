@@ -11,7 +11,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'yxhk:mail-queue:work', description: '运行 CSV 邮件轮询队列')]
+#[AsCommand(name: 'yxhk:mail-queue:work', description: '运行邮件轮询队列')]
 final class MailQueueCommand extends Command
 {
     public function __construct(private readonly QueueStore $store, private readonly QueueService $queue)

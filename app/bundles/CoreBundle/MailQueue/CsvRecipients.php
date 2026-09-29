@@ -6,11 +6,56 @@ namespace Mautic\CoreBundle\MailQueue;
 
 final class CsvRecipients
 {
-    public static function read(string $file, int $limit): array
+    public static function read(string $file, int $limit, string $format = 'csv'): array
     {
-        if ($limit < 1 || $limit > 20000 || filesize($file) > 10 * 1024 * 1024) {
-            throw new \InvalidArgumentException('CSV 最大 10 MB，每批最多 20000 人。');
+        if (!in_array($format, ['csv', 'txt'], true)) {
+            throw new \InvalidArgumentException('请上传 CSV 或 TXT 文件。');
         }
+        if ($limit < 1 || $limit > 20000 || !is_file($file) || filesize($file) > 10 * 1024 * 1024) {
+            throw new \InvalidArgumentException('名单文件最大 10 MB，每批最多 20000 人。');
+        }
+        [$rows, $blocked] = 'txt' === $format ? [self::readTextRows($file), []] : self::readCsvRows($file);
+        $unique = [];
+        $counts = ['total' => count($rows), 'excluded' => 0, 'invalid' => 0, 'duplicates' => 0, 'format' => strtoupper($format)];
+        foreach ($rows as $row) {
+            if (isset($blocked['email:'.$row['email']]) || isset($blocked['user:'.trim($row['user_id'] ?? '')])) {
+                ++$counts['excluded'];
+            } elseif (false === filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
+                ++$counts['invalid'];
+            } elseif (isset($unique[$row['email']])) {
+                ++$counts['duplicates'];
+            } else {
+                $unique[$row['email']] = ['email' => $row['email'], 'firstname' => mb_substr(trim(preg_replace('/[\r\n\t]/', ' ', $row['firstname'] ?? $row['nickname'] ?? '')), 0, 100), 'status' => 'pending'];
+            }
+        }
+        $counts['eligible'] = count($unique);
+        $recipients = array_slice(array_values($unique), 0, $limit);
+        if ([] === $recipients) {
+            throw new \InvalidArgumentException('清理后没有可发送的邮箱。');
+        }
+
+        return ['recipients' => $recipients, 'counts' => $counts];
+    }
+
+    private static function readTextRows(string $file): array
+    {
+        $text = file_get_contents($file);
+        if (false === $text || !mb_check_encoding($text, 'UTF-8')) {
+            throw new \InvalidArgumentException('无法读取 TXT，请使用 UTF-8 编码。');
+        }
+        if (str_starts_with($text, "\xEF\xBB\xBF")) {
+            $text = substr($text, 3);
+        }
+        $values = preg_split('/[\s,;，；]+/u', $text, 50002, PREG_SPLIT_NO_EMPTY);
+        if (count($values) > 50000) {
+            throw new \InvalidArgumentException('TXT 原始邮箱最多 50000 条。');
+        }
+
+        return array_map(fn ($value) => ['email' => strtolower(trim($value))], $values);
+    }
+
+    private static function readCsvRows(string $file): array
+    {
         $stream = fopen($file, 'rb');
         if (false === $stream) {
             throw new \InvalidArgumentException('无法读取 CSV。');
@@ -46,26 +91,7 @@ final class CsvRecipients
                     throw new \InvalidArgumentException('CSV 原始记录最多 50000 行。');
                 }
             }
-            $unique = [];
-            $counts = ['total' => count($rows), 'excluded' => 0, 'invalid' => 0, 'duplicates' => 0];
-            foreach ($rows as $row) {
-                if (isset($blocked['email:'.$row['email']]) || isset($blocked['user:'.trim($row['user_id'] ?? '')])) {
-                    ++$counts['excluded'];
-                } elseif (false === filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
-                    ++$counts['invalid'];
-                } elseif (isset($unique[$row['email']])) {
-                    ++$counts['duplicates'];
-                } else {
-                    $unique[$row['email']] = ['email' => $row['email'], 'firstname' => mb_substr(trim(preg_replace('/[\r\n\t]/', ' ', $row['firstname'] ?? $row['nickname'] ?? '')), 0, 100), 'status' => 'pending'];
-                }
-            }
-            $counts['eligible'] = count($unique);
-            $recipients = array_slice(array_values($unique), 0, $limit);
-            if ([] === $recipients) {
-                throw new \InvalidArgumentException('清理后没有可发送的邮箱。');
-            }
-
-            return ['recipients' => $recipients, 'counts' => $counts];
+            return [$rows, $blocked];
         } finally {
             fclose($stream);
         }

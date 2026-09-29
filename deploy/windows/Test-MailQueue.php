@@ -91,7 +91,23 @@ try {
     check(null === QueueSchedule::claim($state, 1160), 'Pause enforced');
     $state['jobs']['test']['status'] = 'running';
     check(6 === QueueSchedule::claim($state, 1160)['index'], 'Restart does not resend sent records');
-    echo "PASS: CSV cleaning, limits, 20/60-second spacing, multi-account rotation, pause and resume.\n";
+    file_put_contents($file, "\xEF\xBB\xBFA@example.com\r\na@example.com\n\nb@example.com；c@example.com,invalid-address;d@example.com e@example.com\t f@example.com\n");
+    $textImport = CsvRecipients::read($file, 10, 'txt');
+    check(6 === count($textImport['recipients']), 'TXT accepts line breaks and common separators');
+    check(8 === $textImport['counts']['total'] && 1 === $textImport['counts']['duplicates'] && 1 === $textImport['counts']['invalid'], 'TXT cleaning counts');
+    check('TXT' === $textImport['counts']['format'] && '' === $textImport['recipients'][0]['firstname'], 'TXT has no header or invented name');
+    check(1 === count(CsvRecipients::read($file, 1, 'txt')['recipients']), 'TXT batch limit');
+    foreach (["\n\t ", "\xFFa@example.com", str_repeat("a@example.com\n", 50001)] as $invalidText) {
+        file_put_contents($file, $invalidText);
+        $rejected = false;
+        try {
+            CsvRecipients::read($file, 10, 'txt');
+        } catch (InvalidArgumentException) {
+            $rejected = true;
+        }
+        check($rejected, 'Reject empty, invalid encoding and oversized TXT lists');
+    }
+    echo "PASS: CSV/TXT cleaning, limits, 20/60-second spacing, multi-account rotation, pause and resume.\n";
 } finally {
     unlink($file);
 }

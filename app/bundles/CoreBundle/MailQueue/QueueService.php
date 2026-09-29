@@ -107,6 +107,10 @@ final class QueueService
         $this->context->profile = $task['sender'];
         $this->context->accepted = 0;
         try {
+            // MySQL can expire connections while this worker is idle.
+            foreach ($this->doctrine->getConnections() as $connection) {
+                $connection->close();
+            }
             $email = $this->emails->getEntity($task['job']['email_id']);
             if ($email instanceof Email) {
                 $this->doctrine->getManager()->refresh($email);
