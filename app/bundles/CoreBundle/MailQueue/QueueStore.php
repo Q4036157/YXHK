@@ -29,6 +29,23 @@ final class QueueStore
         return is_file($file) ? json_decode(file_get_contents($file), true, 512, JSON_THROW_ON_ERROR) : [];
     }
 
+    public function tracking(): ?array
+    {
+        $file = $this->directory().'/tracking.json';
+        if (!is_file($file)) {
+            return null;
+        }
+        $config = json_decode(file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
+        $source = rtrim((string) ($config['source_url'] ?? ''), '/');
+        $public = rtrim((string) ($config['public_url'] ?? ''), '/');
+        if (false === filter_var($source, FILTER_VALIDATE_URL) || false === filter_var($public, FILTER_VALIDATE_URL)
+            || !str_starts_with($public, 'https://')) {
+            throw new \RuntimeException('邮件追踪公开地址配置无效。');
+        }
+
+        return ['source_url' => $source, 'public_url' => $public];
+    }
+
     public function updateProfile(string $id, callable $update): void
     {
         $this->transaction(function (array &$state) use ($id, $update): void {

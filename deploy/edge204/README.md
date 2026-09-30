@@ -6,7 +6,9 @@
 
 `POST /internal/prepare` 返回邮箱是否退订；未退订时签发公开链接。`POST /internal/check` 在 SMTP 投递前再次确认。`GET /internal/events?after=<cursor>` 返回该租户的持久退订或重新订阅事件，最多 200 条；YXHK 按顺序同步 DNC 后才保存游标，失败重试不会丢事件。重新订阅只清除标记为“客户通过 204 退订营销邮件”的 DNC，保留退信和管理员限制。
 
-内部接口经 204 Tailscale 网卡 `100.105.178.111:3192`，Authorization Bearer 密钥决定租户，调用者不能指定其他租户。公网 Nginx 仅发布退订和重新订阅两个精确路径。不要把内部接口加入公网转发。
+内部接口经 204 Tailscale 网卡 `100.105.178.111:3192`，Authorization Bearer 密钥决定租户，调用者不能指定其他租户。公网 Nginx 仅发布退订、重新订阅和邮件追踪图片路径。不要把内部接口加入公网转发。
+
+公网 Nginx 另发布 `GET /marketing/track/<追踪哈希>.gif`，只把邮件打开追踪图片转发到工作站 `100.123.30.26:3034` 的 Mautic `/email/<追踪哈希>.gif`；不开放后台、其他 Mautic 路由或内部退订 API。工作站需要保持 Tailscale 在线。YXHK 的邮件队列仅为新发 HTML 邮件改写图片地址，旧邮件中的 localhost 图片无法追溯修复。
 
 YXHK 租户运行目录 `mail-queue/unsubscribe.json` 需要 `internal_url` 与 `api_key`，例如内部地址 `http://100.105.178.111:3192`。每个租户分配独立密钥；退订覆盖该租户所有营销批次和发件账号，保留邮箱大小写归一化规则，不擅自删除点号或加号。
 

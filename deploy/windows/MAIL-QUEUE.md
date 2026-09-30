@@ -40,6 +40,8 @@ Windows 服务命令：`php bin/console yxhk:mail-queue:work --env=prod`。使�
 
 `-Action Stop -JobId '<批次ID>'` 永久停止该批；`-ShowRecipients` 在控制台列出全部收件人。脚本只显示批次状态、收件邮箱和发件邮箱，不导出 SMTP 凭据。导出的“打开追踪时间”来自 Mautic 同一模板在批次创建后的打开记录，可能受图片屏蔽、代理预取及同模板交叠批次影响；空白不能证明对方未阅读。发送固定模板不调用 AI 模型，不消耗模型 Token。
 
+客户邮件的打开追踪使用 204 上的 `https://zmx.xyz.hr/marketing/track/<追踪哈希>.gif`。在租户运行目录 `mail-queue/tracking.json` 写入 `{"source_url":"http://127.0.0.1:3034","public_url":"https://zmx.xyz.hr/marketing/track"}` 后，新发 HTML 邮件的追踪图片会改用公开地址。该文件不入 Git；已发邮件不会被修改。204 Nginx 只转发这一条图片路径到工作站，`site_url` 继续保留本地地址，不影响 Sub2API 首页和 YXHK 管理界面。
+
 长期运行的后台进程会在每次投递前重新建立数据库连接，避免 MySQL 空闲会话过期影响下一封邮件。
 
 营销发送前必须配置外部可访问的站点/退订地址。仅有 localhost 的部署可向自己试发验证正文和投递，但外部客户无法打开退订及跟踪链接。

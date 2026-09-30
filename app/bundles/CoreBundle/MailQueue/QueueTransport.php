@@ -80,8 +80,20 @@ final class QueueTransport implements TransportInterface
             $headers->addTextHeader('List-Unsubscribe', '<'.$url.'>');
             $headers->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
             $html = $message->getHtmlBody();
-            if (null !== $html && !str_contains($html, $url)) {
-                $message->html($html.'<p><a href="'.htmlspecialchars($url, ENT_QUOTES).'">退订营销邮件</a></p>');
+            if (null !== $html) {
+                $tracking = $this->store->tracking();
+                if (null !== $tracking) {
+                    $prefix = $tracking['source_url'].'/email/';
+                    $html = preg_replace_callback(
+                        '~'.preg_quote($prefix, '~').'([A-Za-z0-9_-]{16,128})\.gif(?=[?"\'])~',
+                        static fn (array $match): string => $tracking['public_url'].'/'.$match[1].'.gif',
+                        $html
+                    );
+                }
+                if (!str_contains($html, $url)) {
+                    $html .= '<p><a href="'.htmlspecialchars($url, ENT_QUOTES).'">退订营销邮件</a></p>';
+                }
+                $message->html($html);
             }
             $text = $message->getTextBody();
             if (null !== $text && !str_contains($text, $url)) {
