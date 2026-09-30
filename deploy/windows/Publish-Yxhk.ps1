@@ -55,7 +55,12 @@ try {
         Invoke-Checked $npm @('ci', '--no-audit', '--no-fund')
         Invoke-Checked $npx @('--no-install', 'patch-package')
         Invoke-Checked $npm @('ci', '--prefix', 'plugins/GrapesJsBuilderBundle', '--no-audit', '--no-fund')
-        Invoke-Checked $npm @('run', 'build', '--prefix', 'plugins/GrapesJsBuilderBundle')
+        try {
+            Invoke-Checked $npm @('run', 'build', '--prefix', 'plugins/GrapesJsBuilderBundle')
+        } catch {
+            # Parcel can finish writing assets before Node exits abnormally on Windows.
+            Invoke-Checked $npm @('run', 'build', '--prefix', 'plugins/GrapesJsBuilderBundle')
+        }
         $bundleConfig = "<?php`nrequire_once dirname(__DIR__).'/deploy/windows/WindowsAssetsBundle.php';`n" + '$bundles[] = new \Yxhk\NativeWindows\WindowsAssetsBundle();' + "`n"
         Write-Utf8 (Join-Path $release 'config\bundles_local.php') $bundleConfig
         Invoke-Checked $php @('bin/console', 'mautic:assets:generate', '--env=prod', '--no-interaction')
