@@ -11,6 +11,8 @@ use Mautic\LeadBundle\Model\DoNotContact;
 
 final class UnsubscribeSync
 {
+    private const SOURCE = '客户通过 204 退订营销邮件';
+
     private int $lastPoll = 0;
 
     public function __construct(private readonly QueueStore $store, private readonly UnsubscribeClient $client,
@@ -24,8 +26,19 @@ final class UnsubscribeSync
         $connection = $this->doctrine->getConnection();
         $ids = $connection->fetchFirstColumn('SELECT id FROM '.MAUTIC_TABLE_PREFIX.'leads WHERE LOWER(TRIM(email)) = :email', ['email' => strtolower(trim($email))]);
         foreach ($ids as $id) {
-            $this->dnc->addDncForContact((int) $id, 'email', DNC::UNSUBSCRIBED, '客户通过 204 退订营销邮件');
+            $this->dnc->addDncForContact((int) $id, 'email', DNC::UNSUBSCRIBED, self::SOURCE);
         }
+    }
+
+    public function unblock(string $email): void
+    {
+        $connection = $this->doctrine->getConnection();
+        $connection->executeStatement(
+            'DELETE FROM '.MAUTIC_TABLE_PREFIX.'lead_donotcontact WHERE channel = :channel AND reason = :reason'
+            .' AND comments = :source AND lead_id IN (SELECT id FROM '.MAUTIC_TABLE_PREFIX.'leads WHERE LOWER(TRIM(email)) = :email)',
+            ['channel' => 'email', 'reason' => DNC::UNSUBSCRIBED, 'source' => self::SOURCE, 'email' => strtolower(trim($email))]
+        );
+        $this->doctrine->getManager()->clear();
     }
 
     public function tick(int $now): bool
@@ -47,7 +60,14 @@ final class UnsubscribeSync
                 if (!isset($event['email'], $event['id']) || !is_string($event['email']) || !is_int($event['id']) || $event['id'] <= $cursor) {
                     throw new \RuntimeException();
                 }
-                $this->block($event['email']);
+                $action = $event['action'] ?? 'unsubscribe';
+                if ('unsubscribe' === $action) {
+                    $this->block($event['email']);
+                } elseif ('resubscribe' === $action) {
+                    $this->unblock($event['email']);
+                } else {
+                    throw new \RuntimeException('Unknown subscription event');
+                }
             }
             $this->store->transaction(function (array &$state) use ($result, $now): void {
                 $state['unsubscribe_cursor'] = $result['cursor'];

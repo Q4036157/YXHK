@@ -1,12 +1,12 @@
 # 204 营销退订入口
 
-公开入口为 `https://zmx.xyz.hr/marketing/unsubscribe`。普通 GET 只展示确认页面；确认 POST 与邮件客户端 One-Click POST 写入同一份退订记录。令牌为随机值，数据库仅保存其 SHA-256，不在 URL 放邮箱或客户资料。
+公开入口为 `https://zmx.xyz.hr/marketing/unsubscribe`。普通 GET 只展示确认页面；确认 POST 与邮件客户端 One-Click POST 写入同一份退订记录。已退订页面提供“重新订阅”按钮，进入 `https://zmx.xyz.hr/marketing/resubscribe` 再由客户确认 POST。两个操作都需要客户原邮件中的随机令牌；数据库仅保存其 SHA-256，不在 URL 放邮箱或客户资料。
 
 数据保存在 `/var/lib/yxhk-unsubscribe/records.sqlite`，SQLite WAL 与事务保证持久性。请将整个状态目录纳入现有备份，避免只复制正在写入的主数据库文件。凭据在 `/etc/yxhk-unsubscribe/config.json`，不进入 Git。
 
-`POST /internal/prepare` 返回邮箱是否退订；未退订时签发公开链接。`POST /internal/check` 在 SMTP 投递前再次确认。`GET /internal/events?after=<cursor>` 返回该租户的持久退订事件，最多 200 条；YXHK 成功写入全部 DNC 后才保存游标，失败重试不会丢事件。
+`POST /internal/prepare` 返回邮箱是否退订；未退订时签发公开链接。`POST /internal/check` 在 SMTP 投递前再次确认。`GET /internal/events?after=<cursor>` 返回该租户的持久退订或重新订阅事件，最多 200 条；YXHK 按顺序同步 DNC 后才保存游标，失败重试不会丢事件。重新订阅只清除标记为“客户通过 204 退订营销邮件”的 DNC，保留退信和管理员限制。
 
-内部接口经 204 Tailscale 网卡 `100.105.178.111:3192`，Authorization Bearer 密钥决定租户，调用者不能指定其他租户。公网 Nginx 仅发布精确退订路径。不要把内部接口加入公网转发。
+内部接口经 204 Tailscale 网卡 `100.105.178.111:3192`，Authorization Bearer 密钥决定租户，调用者不能指定其他租户。公网 Nginx 仅发布退订和重新订阅两个精确路径。不要把内部接口加入公网转发。
 
 YXHK 租户运行目录 `mail-queue/unsubscribe.json` 需要 `internal_url` 与 `api_key`，例如内部地址 `http://100.105.178.111:3192`。每个租户分配独立密钥；退订覆盖该租户所有营销批次和发件账号，保留邮箱大小写归一化规则，不擅自删除点号或加号。
 

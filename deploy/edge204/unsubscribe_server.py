@@ -17,6 +17,7 @@ class Store:
     def __init__(self, path):
         self.path = path
         with self.connect() as db:
+            migrating = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='suppression_events'").fetchone() is None
             db.executescript("""
                 PRAGMA journal_mode=WAL;
                 CREATE TABLE IF NOT EXISTS tokens (
@@ -24,7 +25,14 @@ class Store:
                 CREATE TABLE IF NOT EXISTS suppressions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT, tenant TEXT NOT NULL,
                     email TEXT NOT NULL, created INTEGER NOT NULL, UNIQUE(tenant,email));
+                CREATE TABLE IF NOT EXISTS suppression_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, tenant TEXT NOT NULL,
+                    email TEXT NOT NULL, action TEXT NOT NULL,
+                    created INTEGER NOT NULL);
             """)
+            if migrating:
+                db.execute("INSERT INTO suppression_events(id,tenant,email,action,created) "
+                           "SELECT id,tenant,email,'unsubscribe',created FROM suppressions")
 
     @contextmanager
     def connect(self):
@@ -65,16 +73,29 @@ class Store:
     def unsubscribe(self, token):
         tenant, email = self.resolve(token)
         with self.connect() as db:
-            db.execute("INSERT OR IGNORE INTO suppressions(tenant,email,created) VALUES (?,?,?)", (tenant, email, int(time.time())))
+            now = int(time.time())
+            inserted = db.execute("INSERT OR IGNORE INTO suppressions(tenant,email,created) VALUES (?,?,?)", (tenant, email, now))
+            if inserted.rowcount:
+                db.execute("INSERT INTO suppression_events(tenant,email,action,created) VALUES (?,?,?,?)",
+                           (tenant, email, "unsubscribe", now))
+
+    def resubscribe(self, token):
+        tenant, email = self.resolve(token)
+        with self.connect() as db:
+            removed = db.execute("DELETE FROM suppressions WHERE tenant=? AND email=?", (tenant, email))
+            if removed.rowcount:
+                db.execute("INSERT INTO suppression_events(tenant,email,action,created) VALUES (?,?,?,?)",
+                           (tenant, email, "resubscribe", int(time.time())))
+            return bool(removed.rowcount)
 
     def events(self, tenant, after):
         with self.connect() as db:
-            rows = db.execute("SELECT id,email,created FROM suppressions WHERE tenant=? AND id>? ORDER BY id LIMIT 200", (tenant, after)).fetchall()
+            rows = db.execute("SELECT id,email,action,created FROM suppression_events WHERE tenant=? AND id>? ORDER BY id LIMIT 200", (tenant, after)).fetchall()
         return [dict(row) for row in rows]
 
     def latest(self, tenant):
         with self.connect() as db:
-            return db.execute("SELECT COALESCE(MAX(id),0) FROM suppressions WHERE tenant=?", (tenant,)).fetchone()[0]
+            return db.execute("SELECT COALESCE(MAX(id),0) FROM suppression_events WHERE tenant=?", (tenant,)).fetchone()[0]
 
 
 def make_handler(store, config):
@@ -125,15 +146,25 @@ def make_handler(store, config):
                         db.execute("SELECT 1").fetchone()
                     self.reply(200, {"status": "ok"})
                     return
-                if url.path == "/marketing/unsubscribe":
+                if url.path in ("/marketing/unsubscribe", "/marketing/resubscribe"):
                     fields = parse_qs(self.body()) if post else parse_qs(url.query)
                     token = fields.get("token", parse_qs(url.query).get("token", [""]))[0]
-                    store.resolve(token)
-                    if post:
+                    tenant, email = store.resolve(token)
+                    hidden = '<input type="hidden" name="token" value="'+html.escape(token, quote=True)+'">'
+                    if url.path == "/marketing/unsubscribe" and post:
                         store.unsubscribe(token)
-                        self.page("退订成功", "<p>您已退订此发送方的营销活动邮件，后续将不再向您发送。</p>")
+                        self.page("退订成功", '<p>您已退订此发送方的营销活动邮件。</p><form method="get" action="/marketing/resubscribe">'+hidden+'<button type="submit">重新订阅</button></form>')
+                    elif url.path == "/marketing/unsubscribe" and store.blocked(tenant, email):
+                        self.page("已退订", '<p>此邮箱当前已退订营销活动邮件。</p><form method="get" action="/marketing/resubscribe">'+hidden+'<button type="submit">重新订阅</button></form>')
+                    elif url.path == "/marketing/unsubscribe":
+                        self.page("退订营销邮件", '<p>确认后，将停止接收此发送方的营销活动邮件。</p><form method="post" action="/marketing/unsubscribe">'+hidden+'<button type="submit">确认退订</button></form>')
+                    elif post:
+                        store.resubscribe(token)
+                        self.page("重新订阅已确认", "<p>您的重新订阅请求已确认。系统将解除本入口产生的退订限制；其他退信或管理员限制仍然有效。</p>")
+                    elif store.blocked(tenant, email):
+                        self.page("确认重新订阅", '<p>确认后，您将可以重新接收此发送方的营销活动邮件。其他退信或管理员限制仍然有效。</p><form method="post" action="/marketing/resubscribe">'+hidden+'<button type="submit">确认重新订阅</button></form>')
                     else:
-                        self.page("退订营销邮件", '<p>确认后，将停止接收此发送方的营销活动邮件。</p><form method="post" action="/marketing/unsubscribe"><input type="hidden" name="token" value="'+html.escape(token, quote=True)+'"><button type="submit">确认退订</button></form>')
+                        self.page("当前未退订", "<p>此邮箱当前可以接收营销活动邮件。</p>")
                     return
                 if url.path.startswith("/internal/"):
                     tenant = self.tenant()
