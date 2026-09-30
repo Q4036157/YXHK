@@ -38,7 +38,10 @@ Push-Location $release
 try {
     $raw = & $php @arguments 2>&1
     if ($LASTEXITCODE -ne 0) { throw "YXHK 队列命令失败：$($raw -join ' ')" }
-    $result = ($raw -join "`n") | ConvertFrom-Json
+    $payload = [string]@($raw)[-1]
+    $jsonStart = $payload.IndexOf('{')
+    if ($jsonStart -lt 0) { throw "YXHK 队列命令未返回状态数据：$($raw -join ' ')" }
+    $result = $payload.Substring($jsonStart) | ConvertFrom-Json
 } finally {
     Pop-Location
 }
