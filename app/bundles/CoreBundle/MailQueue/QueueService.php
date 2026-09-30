@@ -152,6 +152,8 @@ final class QueueService
                     $profile = $lead->getProfileFields();
                     $profile['id'] = $lead->getId();
                     $profile['email'] = $lead->getEmail();
+                    $profile['firstname'] = (string) ($profile['firstname'] ?? '');
+                    $profile['lastname'] = (string) ($profile['lastname'] ?? '');
                     $success = $this->emails->sendEmail($email, $profile, ['allowResends' => false, 'ignoreDNC' => false, 'dnc_as_error' => true]);
                     if ($this->context->unsubscribeUnavailable) {
                         throw new UnsubscribeUnavailable('204 退订检查失败，批次已暂停；连接恢复后可继续。');

@@ -75,8 +75,8 @@ final class QueueTransport implements TransportInterface
                 throw new UnsubscribeUnavailable('未生成公开退订链接，批次已暂停。');
             }
             $headers = $message->getHeaders();
-            $headers->removeAll('List-Unsubscribe');
-            $headers->removeAll('List-Unsubscribe-Post');
+            $headers->remove('List-Unsubscribe');
+            $headers->remove('List-Unsubscribe-Post');
             $headers->addTextHeader('List-Unsubscribe', '<'.$url.'>');
             $headers->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
             $html = $message->getHtmlBody();
