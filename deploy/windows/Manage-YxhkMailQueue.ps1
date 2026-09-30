@@ -89,7 +89,7 @@ if ($ExportCsv) {
             完成时间 = if ($_.finished) { [DateTimeOffset]::FromUnixTimeSeconds([long]$_.finished).LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss') } else { '' }
             打开追踪时间 = $_.opened_at
         }
-    } | Export-Csv -LiteralPath $destination -NoTypeInformation -Encoding UTF8
+    } | Export-Csv -LiteralPath $destination -NoTypeInformation -Encoding $(if ($PSVersionTable.PSVersion.Major -ge 6) { 'utf8BOM' } else { 'UTF8' })
     Write-Host "收件明细已导出：$destination"
     Write-Host $result.open_tracking_note
 }
