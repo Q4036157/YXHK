@@ -10,6 +10,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
 
 #[AsCommand(name: 'yxhk:mail-queue:work', description: '运行邮件轮询队列')]
 final class MailQueueCommand extends Command
@@ -29,8 +30,29 @@ final class MailQueueCommand extends Command
         }
         try {
             $this->queue->recover();
+            $nextInboxPoll = 0;
+            $inboxPoll = null;
+            $inboxPollStarted = 0;
             while (true) {
                 $this->queue->tick(time());
+                if (null !== $inboxPoll && !$inboxPoll->isRunning()) {
+                    $inboxPoll = null;
+                }
+                if (null !== $inboxPoll && time() - $inboxPollStarted > 20) {
+                    $inboxPoll->stop(1);
+                    $inboxPoll = null;
+                }
+                if (null === $inboxPoll && time() >= $nextInboxPoll) {
+                    $nextInboxPoll = time() + 300;
+                    try {
+                        $inboxPoll = new Process([PHP_BINARY, 'bin/console', 'yxhk:inbox:poll', '--env=prod', '--no-interaction'], getcwd() ?: null);
+                        $inboxPoll->start();
+                        $inboxPollStarted = time();
+                    } catch (\Throwable $exception) {
+                        $inboxPoll = null;
+                        $output->writeln('客户回复后台检查未能启动。');
+                    }
+                }
                 sleep(1);
             }
         } finally {

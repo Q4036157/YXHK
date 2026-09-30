@@ -9,6 +9,10 @@ return [
                 'path' => '/mail-queue',
                 'controller' => 'Mautic\\CoreBundle\\Controller\\MailQueueController::indexAction',
             ],
+            'yxhk_inbox' => [
+                'path' => '/inbox',
+                'controller' => 'Mautic\\CoreBundle\\Controller\\InboxController::indexAction',
+            ],
             'mautic_core_ajax' => [
                 'path'       => '/ajax',
                 'controller' => 'Mautic\CoreBundle\Controller\AjaxController::delegateAjaxAction',
@@ -115,6 +119,13 @@ return [
     ],
     'menu' => [
         'main' => [
+            '客户回复' => [
+                'id' => 'yxhk_inbox',
+                'route' => 'yxhk_inbox',
+                'iconClass' => 'ri-mail-open-line',
+                'priority' => 38,
+                'access' => 'admin',
+            ],
             '邮件发送队列' => [
                 'id' => 'yxhk_mail_queue',
                 'route' => 'yxhk_mail_queue',
