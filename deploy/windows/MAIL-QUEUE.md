@@ -28,6 +28,18 @@ SMTP 返回成功代表接收投递，不代表邮件最终到达收件箱。失
 
 Windows 服务命令：`php bin/console yxhk:mail-queue:work --env=prod`。使用 PXYOPS 的 `Install-YxhkMailQueue.ps1` 安装租户后台服务；账号及权限沿用该租户的隔离服务账号。正式发布切换时会停止并重启邮件队列服务。
 
+工作站脚本 `Manage-YxhkMailQueue.ps1` 控制上述服务的批次，不会另起第二个发信循环。新名单仍需先在网页上传并创建暂停批次，再运行：
+
+```powershell
+& 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Status
+& 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Start -JobId '<批次ID>'
+& 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Pause -JobId '<批次ID>'
+& 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Interval -IntervalSeconds 20
+& 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Status -JobId '<批次ID>' -ExportCsv 'C:\Users\Work\Downloads\本批发送进度.csv'
+```
+
+`-Action Stop -JobId '<批次ID>'` 永久停止该批；`-ShowRecipients` 在控制台列出全部收件人。脚本只显示批次状态、收件邮箱和发件邮箱，不导出 SMTP 凭据。导出的“打开追踪时间”来自 Mautic 同一模板在批次创建后的打开记录，可能受图片屏蔽、代理预取及同模板交叠批次影响；空白不能证明对方未阅读。发送固定模板不调用 AI 模型，不消耗模型 Token。
+
 长期运行的后台进程会在每次投递前重新建立数据库连接，避免 MySQL 空闲会话过期影响下一封邮件。
 
 营销发送前必须配置外部可访问的站点/退订地址。仅有 localhost 的部署可向自己试发验证正文和投递，但外部客户无法打开退订及跟踪链接。
