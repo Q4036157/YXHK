@@ -47,7 +47,7 @@ final class QueueService
         $this->store->transaction(function (array &$state) use ($id, $name, $emailId, $email, $import, $senders, $owner): void {
             $state['jobs'][$id] = ['id' => $id, 'name' => mb_substr($name, 0, 100), 'email_id' => $emailId,
                 'subject' => $email->getSubject(), 'fingerprint' => self::fingerprint($email), 'owner' => $owner,
-                'senders' => $senders, 'recipients' => $import['recipients'], 'counts' => $import['counts'],
+                'senders' => $senders, 'sender_cursor' => 0, 'recipients' => $import['recipients'], 'counts' => $import['counts'],
                 'status' => 'paused', 'created' => time(), 'error' => ''];
         });
 
