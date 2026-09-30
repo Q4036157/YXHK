@@ -4,6 +4,7 @@ param(
     [ValidatePattern('^[a-z][a-z0-9-]{0,31}$')][string]$TenantId = 'owner',
     [string]$JobId,
     [ValidateRange(1, 86400)][int]$IntervalSeconds = 20,
+    [ValidateRange(0, 20000)][int]$MaxRecipients = 0,
     [switch]$ShowRecipients,
     [string]$ExportCsv
 )
@@ -22,6 +23,9 @@ if ($Action -in @('Start', 'Pause', 'Stop') -and [string]::IsNullOrWhiteSpace($J
 if ($ExportCsv -and [string]::IsNullOrWhiteSpace($JobId)) {
     throw '导出明细时必须填写 -JobId，避免混合不同批次。'
 }
+if ($MaxRecipients -gt 0 -and $Action -ne 'Start') {
+    throw '-MaxRecipients 仅用于 -Action Start。'
+}
 if ($Action -eq 'Start') {
     $service = Get-Service -Name $serviceName -ErrorAction Stop
     if ($service.Status -ne 'Running') {
@@ -33,6 +37,7 @@ $commandAction = $Action.ToLowerInvariant()
 $arguments = @('bin/console', 'yxhk:mail-queue:control', $commandAction, '--env=prod', '--no-interaction')
 if ($JobId) { $arguments += "--job=$JobId" }
 if ($Action -eq 'Interval') { $arguments += "--seconds=$IntervalSeconds" }
+if ($MaxRecipients -gt 0) { $arguments += "--limit=$MaxRecipients" }
 if ($ShowRecipients -or $ExportCsv) { $arguments += '--recipients' }
 Push-Location $release
 try {

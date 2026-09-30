@@ -54,9 +54,9 @@ final class QueueService
         return $id;
     }
 
-    public function action(string $id, string $action): void
+    public function action(string $id, string $action, ?int $limit = null): void
     {
-        $this->store->transaction(function (array &$state) use ($id, $action): void {
+        $this->store->transaction(function (array &$state) use ($id, $action, $limit): void {
             if (!isset($state['jobs'][$id])) {
                 throw new \InvalidArgumentException('找不到发送批次。');
             }
@@ -65,6 +65,9 @@ final class QueueService
                 throw new \InvalidArgumentException('操作无效。');
             }
             if ('start' === $action) {
+                if (null !== $limit && ($limit < 1 || $limit > 20000)) {
+                    throw new \InvalidArgumentException('本次发送上限需要在 1 至 20000 条之间。');
+                }
                 if (!in_array($job['status'], ['paused'], true) || !array_filter($job['recipients'], fn ($r) => 'pending' === $r['status'])) {
                     throw new \InvalidArgumentException('此批次没有可启动的待发送记录。');
                 }
@@ -75,8 +78,15 @@ final class QueueService
                 }
                 $job['status'] = 'running';
                 $job['error'] = '';
+                if (null === $limit) {
+                    unset($job['pause_after']);
+                } else {
+                    $processed = count(array_filter($job['recipients'], fn (array $recipient): bool => 'pending' !== $recipient['status']));
+                    $job['pause_after'] = min(count($job['recipients']), $processed + $limit);
+                }
             } else {
                 $job['status'] = 'stop' === $action ? 'stopped' : 'paused';
+                unset($job['pause_after']);
             }
         });
     }
@@ -191,8 +201,13 @@ final class QueueService
             if (in_array($status, ['failed', 'uncertain', 'pending'], true)) {
                 $job['status'] = 'paused';
                 $job['error'] = $error;
+                unset($job['pause_after']);
             } elseif (!array_filter($job['recipients'], fn ($r) => in_array($r['status'], ['pending', 'sending'], true))) {
                 $job['status'] = 'completed';
+                unset($job['pause_after']);
+            } elseif (isset($job['pause_after']) && count(array_filter($job['recipients'], fn (array $r): bool => 'pending' !== $r['status'])) >= $job['pause_after']) {
+                $job['status'] = 'paused';
+                unset($job['pause_after']);
             }
         });
         $this->doctrine->getManager()->clear();

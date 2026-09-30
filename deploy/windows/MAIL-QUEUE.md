@@ -33,12 +33,15 @@ Windows 服务命令：`php bin/console yxhk:mail-queue:work --env=prod`。使�
 ```powershell
 & 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Status
 & 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Start -JobId '<批次ID>'
+& 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Start -JobId '<批次ID>' -MaxRecipients 10
 & 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Pause -JobId '<批次ID>'
 & 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Interval -IntervalSeconds 20
 & 'D:\x1\x2\YXHK\deploy\windows\Manage-YxhkMailQueue.ps1' -Action Status -JobId '<批次ID>' -ExportCsv 'C:\Users\Work\Downloads\本批发送进度.csv'
 ```
 
 `-Action Stop -JobId '<批次ID>'` 永久停止该批；`-ShowRecipients` 在控制台列出全部收件人。脚本只显示批次状态、收件邮箱和发件邮箱，不导出 SMTP 凭据。导出的“打开追踪时间”来自 Mautic 同一模板在批次创建后的打开记录，可能受图片屏蔽、代理预取及同模板交叠批次影响；空白不能证明对方未阅读。发送固定模板不调用 AI 模型，不消耗模型 Token。
+
+`-MaxRecipients 10` 把本次最多处理 10 条待发记录的边界保存到队列中；达到边界后自动暂停。失败、跳过或待核对的记录也占用本次名额，失败仍会立即暂停；不会为凑满 10 封成功而越过失败记录。老批次若没有轮询游标，会按已分配发件账号的记录数延续轮询顺序。
 
 客户邮件的打开追踪使用 204 上的 `https://zmx.xyz.hr/marketing/track/<追踪哈希>.gif`。在租户运行目录 `mail-queue/tracking.json` 写入 `{"source_url":"http://127.0.0.1:3034","public_url":"https://zmx.xyz.hr/marketing/track"}` 后，新发 HTML 邮件的追踪图片会改用公开地址。该文件不入 Git；已发邮件不会被修改。204 Nginx 只转发这一条图片路径到工作站，`site_url` 继续保留本地地址，不影响 Sub2API 首页和 YXHK 管理界面。
 

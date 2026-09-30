@@ -29,6 +29,7 @@ final class MailQueueControlCommand extends Command
         $this->addArgument('action', InputArgument::OPTIONAL, 'status, start, pause, stop, interval', 'status')
             ->addOption('job', null, InputOption::VALUE_REQUIRED, '批次 ID')
             ->addOption('seconds', null, InputOption::VALUE_REQUIRED, '发送间隔（秒）')
+            ->addOption('limit', null, InputOption::VALUE_REQUIRED, '本次最多处理的收件记录数，仅 start 可用')
             ->addOption('recipients', null, InputOption::VALUE_NONE, '包含全部收件明细与打开追踪');
     }
 
@@ -41,7 +42,15 @@ final class MailQueueControlCommand extends Command
                 if ('' === $job) {
                     throw new \InvalidArgumentException('开始、暂停、停止时必须提供 --job。');
                 }
-                $this->queue->action($job, $action);
+                $limit = $input->getOption('limit');
+                if (null !== $limit && 'start' !== $action) {
+                    throw new \InvalidArgumentException('--limit 仅用于 start。');
+                }
+                $count = null === $limit ? null : filter_var($limit, FILTER_VALIDATE_INT);
+                if (false === $count) {
+                    throw new \InvalidArgumentException('--limit 必须是整数。');
+                }
+                $this->queue->action($job, $action, $count);
             } elseif ('interval' === $action) {
                 $seconds = filter_var($input->getOption('seconds'), FILTER_VALIDATE_INT);
                 if (false === $seconds || $seconds < 1 || $seconds > 86400) {
