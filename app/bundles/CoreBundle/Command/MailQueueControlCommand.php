@@ -26,8 +26,10 @@ final class MailQueueControlCommand extends Command
 
     protected function configure(): void
     {
-        $this->addArgument('action', InputArgument::OPTIONAL, 'status, start, pause, stop, interval', 'status')
+        $this->addArgument('action', InputArgument::OPTIONAL, 'status, start, pause, stop, interval, suppress', 'status')
             ->addOption('job', null, InputOption::VALUE_REQUIRED, '批次 ID')
+            ->addOption('email', null, InputOption::VALUE_REQUIRED, '已确认退信的收件地址')
+            ->addOption('reason', null, InputOption::VALUE_REQUIRED, '退信原因')
             ->addOption('seconds', null, InputOption::VALUE_REQUIRED, '发送间隔（秒）')
             ->addOption('limit', null, InputOption::VALUE_REQUIRED, '本次最多处理的收件记录数，仅 start 可用')
             ->addOption('recipients', null, InputOption::VALUE_NONE, '包含全部收件明细与打开追踪');
@@ -59,6 +61,10 @@ final class MailQueueControlCommand extends Command
                 $this->store->transaction(static function (array &$state) use ($seconds): void {
                     $state['interval'] = $seconds;
                 });
+            } elseif ('suppress' === $action) {
+                $email = (string) $input->getOption('email');
+                $reason = (string) ($input->getOption('reason') ?: '收件地址不存在或不正确');
+                $this->store->suppress($email, $reason, '管理员确认的退信');
             } elseif ('status' !== $action) {
                 throw new \InvalidArgumentException('未知操作。');
             }
@@ -89,6 +95,8 @@ final class MailQueueControlCommand extends Command
                             'sender' => $profiles[$recipient['sender'] ?? '']['from'] ?? '',
                             'attempted' => $recipient['attempted'] ?? null,
                             'finished' => $recipient['finished'] ?? null,
+                            'skip_reason' => $recipient['skip_reason'] ?? null,
+                            'bounce_reason' => $recipient['bounce_reason'] ?? null,
                             'opened_at' => 'sent' === $recipient['status'] ? ($opened[$address] ?? null) : null,
                         ];
                     }
@@ -99,6 +107,7 @@ final class MailQueueControlCommand extends Command
                 'interval_seconds' => $state['interval'],
                 'worker_online' => time() - ($state['heartbeat'] ?? 0) < 20,
                 'jobs' => $jobs,
+                'suppressed_count' => count($state['suppressed'] ?? []),
                 'open_tracking_note' => '打开记录来自同一邮件模板与批次创建时间后的追踪，仅供参考；未检测到不等于未阅读。',
             ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
 

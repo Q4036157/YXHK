@@ -1,8 +1,10 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Status', 'Start', 'Pause', 'Stop', 'Interval')][string]$Action = 'Status',
+    [ValidateSet('Status', 'Start', 'Pause', 'Stop', 'Interval', 'Suppress')][string]$Action = 'Status',
     [ValidatePattern('^[a-z][a-z0-9-]{0,31}$')][string]$TenantId = 'owner',
     [string]$JobId,
+    [string]$Email,
+    [string]$Reason,
     [ValidateRange(1, 86400)][int]$IntervalSeconds = 20,
     [ValidateRange(0, 20000)][int]$MaxRecipients = 0,
     [switch]$ShowRecipients,
@@ -26,6 +28,9 @@ if ($ExportCsv -and [string]::IsNullOrWhiteSpace($JobId)) {
 if ($MaxRecipients -gt 0 -and $Action -ne 'Start') {
     throw '-MaxRecipients 仅用于 -Action Start。'
 }
+if ($Action -eq 'Suppress' -and [string]::IsNullOrWhiteSpace($Email)) {
+    throw '登记退信时必须填写 -Email。'
+}
 if ($Action -eq 'Start') {
     $service = Get-Service -Name $serviceName -ErrorAction Stop
     if ($service.Status -ne 'Running') {
@@ -38,6 +43,10 @@ $arguments = @('bin/console', 'yxhk:mail-queue:control', $commandAction, '--env=
 if ($JobId) { $arguments += "--job=$JobId" }
 if ($Action -eq 'Interval') { $arguments += "--seconds=$IntervalSeconds" }
 if ($MaxRecipients -gt 0) { $arguments += "--limit=$MaxRecipients" }
+if ($Action -eq 'Suppress') {
+    $arguments += "--email=$Email"
+    if ($Reason) { $arguments += "--reason=$Reason" }
+}
 if ($ShowRecipients -or $ExportCsv) { $arguments += '--recipients' }
 Push-Location $release
 try {
@@ -52,7 +61,7 @@ try {
 }
 
 Write-Host "后台服务：$(if ($result.worker_online) { '在线' } else { '未在线' })；全局间隔：$($result.interval_seconds) 秒"
-$statusLabels = @{ paused = '已暂停'; running = '发送中'; completed = '已完成'; stopped = '已停止'; pending = '待发送'; sending = '投递中'; sent = 'SMTP 已接收'; skipped = '已跳过'; failed = '发送失败'; uncertain = '待核对' }
+$statusLabels = @{ paused = '已暂停'; running = '发送中'; completed = '已完成'; stopped = '已停止'; pending = '待发送'; sending = '投递中'; sent = 'SMTP 已接收'; bounced = '已退信'; skipped = '已跳过'; failed = '发送失败'; uncertain = '待核对' }
 $result.jobs | ForEach-Object {
     $job = $_
     [pscustomobject]@{
@@ -61,6 +70,7 @@ $result.jobs | ForEach-Object {
         状态 = $statusLabels[$job.status]
         总数 = $job.total
         已接收 = [int]$job.counts.sent
+        已退信 = [int]$job.counts.bounced
         失败 = [int]$job.counts.failed
         跳过 = [int]$job.counts.skipped
         待核对 = [int]$job.counts.uncertain
@@ -72,7 +82,7 @@ if ($ShowRecipients) {
     foreach ($job in $result.jobs) {
         Write-Host "批次：$($job.name) [$($job.id)]"
         $job.recipients | ForEach-Object {
-            [pscustomobject]@{ 邮箱 = $_.email; 状态 = $statusLabels[$_.status]; 发件邮箱 = $_.sender; 打开追踪时间 = $_.opened_at }
+            [pscustomobject]@{ 邮箱 = $_.email; 状态 = $statusLabels[$_.status]; 原因 = if ($_.bounce_reason) { $_.bounce_reason } else { $_.skip_reason }; 发件邮箱 = $_.sender; 打开追踪时间 = $_.opened_at }
         } | Format-Table -AutoSize
     }
     Write-Host $result.open_tracking_note
@@ -89,6 +99,7 @@ if ($ExportCsv) {
         [pscustomobject]@{
             邮箱 = if ($_.email -match '^[=+\-@]') { "'" + $_.email } else { $_.email }
             状态 = $statusLabels[$_.status]
+            原因 = if ($_.bounce_reason) { $_.bounce_reason } else { $_.skip_reason }
             发件邮箱 = if ($_.sender -match '^[=+\-@]') { "'" + $_.sender } else { $_.sender }
             尝试时间 = if ($_.attempted) { [DateTimeOffset]::FromUnixTimeSeconds([long]$_.attempted).LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss') } else { '' }
             完成时间 = if ($_.finished) { [DateTimeOffset]::FromUnixTimeSeconds([long]$_.finished).LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss') } else { '' }

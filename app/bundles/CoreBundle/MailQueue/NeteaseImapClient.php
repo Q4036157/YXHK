@@ -56,6 +56,14 @@ final class NeteaseImapClient
                     'subject' => trim((string) ($decoded['Subject'] ?? $decoded['subject'] ?? '')),
                     'date' => (string) ($decoded['Date'] ?? $decoded['date'] ?? ''),
                 ];
+                $last = count($headers) - 1;
+                if (HardBounceDetector::isCandidate($headers[$last]['from'], $headers[$last]['subject'])) {
+                    $bodyResponse = $this->command($socket, 'FETCH '.$sequence.' BODY.PEEK[TEXT]<0.32768>');
+                    if (false !== $bodyResponse && preg_match('/\{(\d+)\}\r\n/', $bodyResponse, $bodyMatch, PREG_OFFSET_CAPTURE)) {
+                        $bodyStart = $bodyMatch[0][1] + strlen($bodyMatch[0][0]);
+                        $headers[$last]['bounce_body'] = substr($bodyResponse, $bodyStart, (int) $bodyMatch[1][0]);
+                    }
+                }
             }
             $this->command($socket, 'LOGOUT');
 

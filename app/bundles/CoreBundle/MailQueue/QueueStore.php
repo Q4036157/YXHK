@@ -99,6 +99,29 @@ final class QueueStore
         return $this->transaction(fn (array &$state) => $state);
     }
 
+    public function suppress(string $email, string $reason, string $source): void
+    {
+        $email = strtolower(trim($email));
+        if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('拒发地址格式无效。');
+        }
+        $this->transaction(static function (array &$state) use ($email, $reason, $source): void {
+            $state['suppressed'][$email] ??= [
+                'reason' => mb_substr($reason, 0, 200),
+                'source' => mb_substr($source, 0, 100),
+                'at' => time(),
+            ];
+            foreach ($state['jobs'] as &$job) {
+                foreach ($job['recipients'] as &$recipient) {
+                    if ('sent' === $recipient['status'] && strtolower($recipient['email']) === $email) {
+                        $recipient['status'] = 'bounced';
+                        $recipient['bounce_reason'] = mb_substr($reason, 0, 200);
+                    }
+                }
+            }
+        });
+    }
+
     private function write(string $file, array $data): void
     {
         $temp = $file.'.'.bin2hex(random_bytes(6)).'.tmp';

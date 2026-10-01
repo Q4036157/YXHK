@@ -11,5 +11,6 @@ final class SenderContext
     public ?string $recipient = null;
     public ?string $unsubscribeUrl = null;
     public bool $unsubscribed = false;
+    public bool $suppressed = false;
     public bool $unsubscribeUnavailable = false;
 }

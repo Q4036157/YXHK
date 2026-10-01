@@ -58,6 +58,11 @@ final class QueueTransport implements TransportInterface
         }
         $message = clone $message;
         if (null !== $this->context->recipient) {
+            if (isset($this->store->state()['suppressed'][strtolower($this->context->recipient)])) {
+                $this->context->suppressed = true;
+
+                return null;
+            }
             // 在连接 SMTP 之前最后检查，所有轮询账号执行同一条规则。
             try {
                 $blocked = $this->unsubscribe->blocked($this->context->recipient);

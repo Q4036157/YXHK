@@ -119,11 +119,13 @@ final class QueueService
         }
         $status = 'failed';
         $error = '';
+        $skipReason = '';
         $this->context->profile = $task['sender'];
         $this->context->accepted = 0;
         $this->context->recipient = $task['recipient']['email'];
         $this->context->unsubscribeUrl = null;
         $this->context->unsubscribed = false;
+        $this->context->suppressed = false;
         $this->context->unsubscribeUnavailable = false;
         try {
             // MySQL can expire connections while this worker is idle.
@@ -137,46 +139,62 @@ final class QueueService
             if (!$email instanceof Email || self::fingerprint($email) !== $task['job']['fingerprint']) {
                 throw new \RuntimeException('邮件模板已修改，请创建新批次确认正文。');
             }
-            $lead = $this->doctrine->getRepository(Lead::class)->findOneBy(['email' => $task['recipient']['email']]);
-            if (!$lead instanceof Lead) {
-                $lead = $this->leads->getEntity();
-                $lead->imported = true;
-                $lead->setEmail($task['recipient']['email']);
-                if ('' !== $task['recipient']['firstname']) {
-                    $lead->addUpdatedField('firstname', $task['recipient']['firstname']);
-                }
-                $lead->setDateIdentified(new \DateTime());
-                $lead->setOwner($this->doctrine->getRepository(\Mautic\UserBundle\Entity\User::class)->find($task['job']['owner']));
-                $this->leads->saveEntity($lead);
-            }
-            $dnc = $this->emails->getRepository()->getDoNotEmailList([$lead->getId()]);
-            if ([] !== $dnc) {
+            $recipientEmail = strtolower(trim($task['recipient']['email']));
+            $suppressed = $this->store->state()['suppressed'][$recipientEmail] ?? null;
+            if (false === filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
                 $status = 'skipped';
+                $skipReason = '收件地址格式无效';
+            } elseif (null !== $suppressed) {
+                $status = 'skipped';
+                $skipReason = '已确认退信：'.($suppressed['reason'] ?? '地址无效');
             } else {
-                $prepared = $this->unsubscribe->prepare($lead->getEmail());
-                if ($prepared['blocked']) {
-                    $this->unsubscribeSync->block($lead->getEmail());
-                    $status = 'skipped';
-                } else {
-                    $this->context->unsubscribeUrl = $prepared['url'];
-                    $profile = $lead->getProfileFields();
-                    $profile['id'] = $lead->getId();
-                    $profile['email'] = $lead->getEmail();
-                    $profile['firstname'] = (string) ($profile['firstname'] ?? '');
-                    $profile['lastname'] = (string) ($profile['lastname'] ?? '');
-                    $success = $this->emails->sendEmail($email, $profile, ['allowResends' => false, 'ignoreDNC' => false, 'dnc_as_error' => true]);
-                    if ($this->context->unsubscribeUnavailable) {
-                        throw new UnsubscribeUnavailable('204 退订检查失败，批次已暂停；连接恢复后可继续。');
+                $lead = $this->doctrine->getRepository(Lead::class)->findOneBy(['email' => $task['recipient']['email']]);
+                if (!$lead instanceof Lead) {
+                    $lead = $this->leads->getEntity();
+                    $lead->imported = true;
+                    $lead->setEmail($task['recipient']['email']);
+                    if ('' !== $task['recipient']['firstname']) {
+                        $lead->addUpdatedField('firstname', $task['recipient']['firstname']);
                     }
-                    if ($this->context->unsubscribed) {
+                    $lead->setDateIdentified(new \DateTime());
+                    $lead->setOwner($this->doctrine->getRepository(\Mautic\UserBundle\Entity\User::class)->find($task['job']['owner']));
+                    $this->leads->saveEntity($lead);
+                }
+                $dnc = $this->emails->getRepository()->getDoNotEmailList([$lead->getId()]);
+                if ([] !== $dnc) {
+                    $status = 'skipped';
+                    $skipReason = '联系人已列入拒发名单';
+                } else {
+                    $prepared = $this->unsubscribe->prepare($lead->getEmail());
+                    if ($prepared['blocked']) {
                         $this->unsubscribeSync->block($lead->getEmail());
                         $status = 'skipped';
-                    } elseif (true === $success && 1 === $this->context->accepted) {
-                        $status = 'sent';
-                    } elseif (0 === $this->context->accepted && true === $success) {
-                        $status = 'skipped';
+                        $skipReason = '客户已退订';
                     } else {
-                        throw new \RuntimeException('SMTP 未确认接收邮件，批次已暂停。请核对发送账号和原生日志。');
+                        $this->context->unsubscribeUrl = $prepared['url'];
+                        $profile = $lead->getProfileFields();
+                        $profile['id'] = $lead->getId();
+                        $profile['email'] = $lead->getEmail();
+                        $profile['firstname'] = (string) ($profile['firstname'] ?? '');
+                        $profile['lastname'] = (string) ($profile['lastname'] ?? '');
+                        $success = $this->emails->sendEmail($email, $profile, ['allowResends' => false, 'ignoreDNC' => false, 'dnc_as_error' => true]);
+                        if ($this->context->unsubscribeUnavailable) {
+                            throw new UnsubscribeUnavailable('204 退订检查失败，批次已暂停；连接恢复后可继续。');
+                        }
+                        if ($this->context->suppressed) {
+                            $status = 'skipped';
+                            $skipReason = '已确认退信';
+                        } elseif ($this->context->unsubscribed) {
+                            $this->unsubscribeSync->block($lead->getEmail());
+                            $status = 'skipped';
+                            $skipReason = '客户已退订';
+                        } elseif (true === $success && 1 === $this->context->accepted) {
+                            $status = 'sent';
+                        } elseif (0 === $this->context->accepted && true === $success) {
+                            $status = 'skipped';
+                        } else {
+                            throw new \RuntimeException('SMTP 未确认接收邮件，批次已暂停。请核对发送账号和原生日志。');
+                        }
                     }
                 }
             }
@@ -193,11 +211,14 @@ final class QueueService
         } finally {
             $this->context->profile = null;
         }
-        $this->store->transaction(function (array &$state) use ($task, $status, $error): void {
+        $this->store->transaction(function (array &$state) use ($task, $status, $error, $skipReason): void {
             $job = &$state['jobs'][$task['job_id']];
             $recipient = &$job['recipients'][$task['index']];
             $recipient['status'] = $status;
             $recipient['finished'] = time();
+            if ('' !== $skipReason) {
+                $recipient['skip_reason'] = $skipReason;
+            }
             if (in_array($status, ['failed', 'uncertain', 'pending'], true)) {
                 $job['status'] = 'paused';
                 $job['error'] = $error;

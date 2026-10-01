@@ -44,8 +44,22 @@ final class InboxPoller
         $profile = $profiles[$selected];
         try {
             $headers = $this->imap->recentHeaders((string) $profile['type'], (string) $profile['username'], (string) ($profile['password'] ?? ''));
+            $sentAddresses = [];
+            foreach ($this->queue->state()['jobs'] as $job) {
+                foreach ($job['recipients'] as $recipient) {
+                    if (($recipient['sender'] ?? '') === $selected && in_array($recipient['status'], ['sent', 'bounced'], true)) {
+                        $sentAddresses[] = strtolower($recipient['email']);
+                    }
+                }
+            }
+            $sentAddresses = array_values(array_unique($sentAddresses));
             $messages = [];
             foreach ($headers as $item) {
+                if (isset($item['bounce_body'])) {
+                    foreach (HardBounceDetector::failedAddresses($item['bounce_body'], $sentAddresses) as $address) {
+                        $this->queue->suppress($address, '收件地址不存在（邮箱系统退信）', 'IMAP '.$profile['username']);
+                    }
+                }
                 $messages[] = [
                     'key' => $selected.':'.$item['validity'].':'.$item['uid'],
                     'profile_id' => $selected,
