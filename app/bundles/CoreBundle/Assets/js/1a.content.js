@@ -430,6 +430,36 @@ Mautic.onPageLoad = function (container, response, inModal) {
         });
     }
 
+    if (mQuery(container + ' form.yxhk-inbox-handled-form').length) {
+        mQuery(document).off('submit.yxhkInboxHandled', 'form.yxhk-inbox-handled-form');
+        mQuery(document).on('submit.yxhkInboxHandled', 'form.yxhk-inbox-handled-form', function (event) {
+            event.preventDefault();
+            const form = mQuery(this);
+            const button = form.find('button[type="submit"]');
+            const error = form.find('.yxhk-inbox-handled-error');
+            const previousLabel = button.text();
+            error.text('');
+            button.prop('disabled', true).text('保存中…');
+            mQuery.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    form.find('input[name="handled"]').val(response.handled ? '0' : '1');
+                    button.text(response.handled ? '已处理，改为待处理' : '待处理，标记完成');
+                },
+                error: function (request) {
+                    button.text(previousLabel);
+                    error.text(request.responseJSON?.message || '保存失败，请重试。');
+                },
+                complete: function () {
+                    button.prop('disabled', false);
+                }
+            });
+        });
+    }
+
     //initialize forms
     mQuery(container + " form[data-toggle='ajax']").each(function (index) {
         Mautic.ajaxifyForm(mQuery(this).attr('name'));

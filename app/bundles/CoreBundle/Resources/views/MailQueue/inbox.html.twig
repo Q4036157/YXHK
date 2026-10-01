@@ -38,7 +38,7 @@
 {% for key, message in messages %}
 <tr><td>{{ message.received_at|date('Y-m-d H:i') }}</td><td>{{ accounts[message.profile_id].email }}</td><td>{{ message.from }}</td><td>{{ message.subject ?: '（无主题）' }}
 <form class="yxhk-inbox-detail-form" method="post" action="{{ path('yxhk_inbox') }}" style="display:inline-block; margin-left:8px"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="detail"><input type="hidden" name="id" value="{{ key }}"><button class="btn btn-sm btn-default" type="submit">详情</button></form></td>
-<td><form method="post" action="{{ path('yxhk_inbox') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="handled"><input type="hidden" name="id" value="{{ key }}"><input type="hidden" name="handled" value="{{ message.handled ? '0' : '1' }}"><button class="btn btn-sm btn-default" type="submit">{{ message.handled ? '已处理，改为待处理' : '待处理，标记完成' }}</button></form></td></tr>
+<td><form class="yxhk-inbox-handled-form" method="post" action="{{ path('yxhk_inbox') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="handled"><input type="hidden" name="id" value="{{ key }}"><input type="hidden" name="handled" value="{{ message.handled ? '0' : '1' }}"><button class="btn btn-sm btn-default" type="submit">{{ message.handled ? '已处理，改为待处理' : '待处理，标记完成' }}</button><span class="yxhk-inbox-handled-error text-danger" role="status" aria-live="polite"></span></form></td></tr>
 {% else %}<tr><td colspan="5">暂无收件记录。启用账号后点击“检查收件”。</td></tr>{% endfor %}
 </tbody></table></div></div>
 </div>

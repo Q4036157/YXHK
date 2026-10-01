@@ -103,6 +103,15 @@ final class InboxController extends CommonController
                 $error = $exception->getMessage();
                 $notice[] = $error;
             }
+            if ('handled' === $action && $request->isXmlHttpRequest()) {
+                $message = $inbox->read()['messages'][$id] ?? null;
+
+                return $this->json([
+                    'ok' => null === $error,
+                    'handled' => (bool) ($message['handled'] ?? false),
+                    'message' => end($notice),
+                ], null === $error ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
             if (in_array($action, ['account', 'request'], true) && $request->isXmlHttpRequest()) {
                 $states = $inbox->read()['accounts'];
                 $state = $states[$id] ?? [];
