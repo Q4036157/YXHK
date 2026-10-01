@@ -7,12 +7,16 @@
 <div id="yxhk-inbox-feedback" class="alert hide" role="status" aria-live="polite"></div>
 {% for message in notice %}<div class="alert alert-info">{{ message }}</div>{% endfor %}
 <div class="panel panel-default"><div class="panel-body">
-<h3>收件监控</h3>
+<h3>客户回复检查</h3>
 <p>邮件仍保存在各自的原邮箱。此页只读取最近 20 封邮件的发件人、主题和时间，不读取正文，也不会把原邮箱的邮件标记为已读。请到对应邮箱处理和回复。</p>
-<p>启用前，请在邮箱网页设置中打开 IMAP 服务；使用与 SMTP 对应的授权码。每个账号至少间隔 15 分钟检查一次，后台每分钟最多检查一个账号。账号越多，轮完一遍所需时间越长。登录失败会自动暂停该账号，避免反复尝试。</p>
+<p>启用前，请在邮箱网页设置中打开 IMAP 服务；使用与 SMTP 对应的授权码。只有点击“检查收件”才会连接邮箱，不再定时自动登录。每个账号两次检查至少间隔 15 分钟，后台每分钟最多检查一个账号。登录失败会暂停该账号。</p>
+<form class="yxhk-inbox-request-form" method="post" action="{{ path('yxhk_inbox') }}">
+<input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="request"><input type="hidden" name="id" value="all">
+<button class="btn btn-primary" type="submit">检查全部已启用邮箱一次</button>
+</form>
 <table class="table"><thead><tr><th>邮箱</th><th>状态</th><th>最近成功</th><th>操作</th></tr></thead><tbody>
 {% for id, account in accounts %}
-<tr><td>{{ account.email }}<br><small>{{ account.label }}</small></td>
+<tr data-account-id="{{ id }}"><td>{{ account.email }}<br><small>{{ account.label }}</small></td>
 <td class="yxhk-inbox-account-status">{{ account.state.status|default('未启用') }}</td>
 <td>{{ account.state.last_success is defined ? account.state.last_success|date('Y-m-d H:i') : '尚未连接' }}</td>
 <td><form class="yxhk-inbox-account-form" method="post" action="{{ path('yxhk_inbox') }}">
@@ -20,6 +24,10 @@
 <input type="hidden" name="enabled" value="{{ account.state.enabled|default(false) ? '0' : '1' }}">
 <button class="btn btn-sm {{ account.state.enabled|default(false) ? 'btn-default' : 'btn-primary' }}" type="submit" {{ not account.configured ? 'disabled' }}>{{ account.state.enabled|default(false) ? '关闭监控' : '启用监控' }}</button>
 <a class="btn btn-sm btn-default" href="{{ account.type == '163' ? 'https://mail.163.com/' : 'https://mail.126.com/' }}" target="_blank" rel="noopener noreferrer">打开原邮箱</a>
+</form>
+<form class="yxhk-inbox-request-form" method="post" action="{{ path('yxhk_inbox') }}">
+<input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="request"><input type="hidden" name="id" value="{{ id }}">
+<button class="btn btn-sm btn-default" type="submit" {{ not account.state.enabled|default(false) ? 'disabled' }}>检查收件</button>
 </form></td></tr>
 {% endfor %}
 </tbody></table>
@@ -30,7 +38,7 @@
 {% for key, message in messages %}
 <tr><td>{{ message.received_at|date('Y-m-d H:i') }}</td><td>{{ accounts[message.profile_id].email }}</td><td>{{ message.from }}</td><td>{{ message.subject ?: '（无主题）' }}</td>
 <td><form method="post" action="{{ path('yxhk_inbox') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="handled"><input type="hidden" name="id" value="{{ key }}"><input type="hidden" name="handled" value="{{ message.handled ? '0' : '1' }}"><button class="btn btn-sm btn-default" type="submit">{{ message.handled ? '已处理，改为待处理' : '待处理，标记完成' }}</button></form></td></tr>
-{% else %}<tr><td colspan="5">暂无收件记录。启用账号并等待首次检查后显示。</td></tr>{% endfor %}
+{% else %}<tr><td colspan="5">暂无收件记录。启用账号后点击“检查收件”。</td></tr>{% endfor %}
 </tbody></table></div></div>
 </div>
 {% endblock %}

@@ -20,7 +20,7 @@ final class InboxPoller
             $selected = null;
             $earliest = PHP_INT_MAX;
             foreach ($data['accounts'] as $id => $account) {
-                if (empty($account['enabled']) || !isset($profiles[$id]) || !in_array($profiles[$id]['type'] ?? '', ['163', '126'], true)
+                if (empty($account['enabled']) || empty($account['request_pending']) || !isset($profiles[$id]) || !in_array($profiles[$id]['type'] ?? '', ['163', '126'], true)
                     || ($account['next_at'] ?? 0) > $now) {
                     continue;
                 }
@@ -31,6 +31,7 @@ final class InboxPoller
                 }
             }
             if (null !== $selected) {
+                $data['accounts'][$selected]['request_pending'] = false;
                 $data['accounts'][$selected]['next_at'] = $now + self::INTERVAL;
                 $data['accounts'][$selected]['last_attempt'] = $now;
             }
@@ -38,7 +39,7 @@ final class InboxPoller
             return $selected;
         });
         if (null === $selected) {
-            return '暂无到期的收件账号。';
+            return '暂无手动请求的收件账号。';
         }
 
         $profile = $profiles[$selected];

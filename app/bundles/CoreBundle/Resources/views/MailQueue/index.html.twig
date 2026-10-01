@@ -10,6 +10,7 @@
 <div class="panel panel-default"><div class="panel-body">
 <h3>发送节奏</h3>
 <p>按本批选中的账号顺序轮询，每次只发送一封。20 秒间隔约为每分钟 3 封；60 秒间隔约为每分钟 1 封。暂停不会撤回已投递的邮件。</p>
+<p>发送前会检查邮箱格式、已知退信和退订记录，以及收件域名是否有邮件路由。域名可收邮件不代表具体邮箱账号存在；具体账号若被收件服务商延迟拒收，仍需依靠退信确认并自动拒发。</p>
 <p>后台进程：<strong>{{ online ? '在线' : '未运行或正在启动' }}</strong></p>
 {% if state.unsubscribe_sync is defined %}
 <p>204 退订同步：<strong>{{ state.unsubscribe_sync.status == 'ok' ? '连接正常' : '同步失败' }}</strong>
@@ -51,7 +52,7 @@
 {% if job.status == 'paused' %}<button class="btn btn-primary" name="action" value="start">开始 / 继续</button>{% endif %}
 {% if job.status == 'running' %}<button class="btn btn-default" name="action" value="pause">暂停</button>{% endif %}
 {% if job.status in ['paused','running'] %}<button class="btn btn-default" name="action" value="stop">停止此批次</button>{% endif %}</form>
-<details><summary>查看前 10 条收件记录</summary><table class="table"><thead><tr><th>邮箱</th><th>状态</th><th>发件账号</th></tr></thead><tbody>{% for recipient in job.preview %}<tr><td>{{ recipient.email }}</td><td>{{ statuses[recipient.status] }}</td><td>{{ profiles[recipient.sender|default('')].label|default(recipient.sender|default('待分配')) }}</td></tr>{% endfor %}</tbody></table></details>
+<details><summary>查看前 10 条收件记录</summary><table class="table"><thead><tr><th>邮箱</th><th>状态</th><th>发件账号</th><th>说明</th></tr></thead><tbody>{% for recipient in job.preview %}<tr><td>{{ recipient.email }}</td><td>{{ statuses[recipient.status] }}</td><td>{{ profiles[recipient.sender|default('')].label|default(recipient.sender|default('待分配')) }}</td><td>{{ recipient.skip_reason|default(recipient.bounce_reason|default('')) }}</td></tr>{% endfor %}</tbody></table></details>
 </div></div>{% else %}<p>暂无批次。上传 TXT 或 CSV 后先核对名单，再启动发送。</p>{% endfor %}
 </div>
 {% endblock %}

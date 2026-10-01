@@ -20,6 +20,7 @@ final class QueueService
         private readonly LeadModel $leads,
         private readonly UnsubscribeClient $unsubscribe,
         private readonly UnsubscribeSync $unsubscribeSync,
+        private readonly RecipientDomainCheck $recipientDomains,
     ) {
     }
 
@@ -147,6 +148,9 @@ final class QueueService
             } elseif (null !== $suppressed) {
                 $status = 'skipped';
                 $skipReason = '已确认退信：'.($suppressed['reason'] ?? '地址无效');
+            } elseif (null !== ($domainReason = $this->recipientDomains->rejectReason($recipientEmail))) {
+                $status = 'skipped';
+                $skipReason = $domainReason;
             } else {
                 $lead = $this->doctrine->getRepository(Lead::class)->findOneBy(['email' => $task['recipient']['email']]);
                 if (!$lead instanceof Lead) {
@@ -198,7 +202,7 @@ final class QueueService
                     }
                 }
             }
-        } catch (UnsubscribeUnavailable $exception) {
+        } catch (UnsubscribeUnavailable|RecipientCheckUnavailable $exception) {
             $status = 'pending';
             $error = $exception->getMessage();
         } catch (\Throwable $exception) {

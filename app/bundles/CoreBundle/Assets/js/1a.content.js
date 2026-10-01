@@ -345,6 +345,38 @@ Mautic.onPageLoad = function (container, response, inModal) {
                     status.text(response.status);
                     button.text(response.enabled ? '关闭监控' : '启用监控');
                     button.toggleClass('btn-primary', !response.enabled).toggleClass('btn-default', response.enabled);
+                    form.closest('tr').find('form.yxhk-inbox-request-form button').prop('disabled', !response.enabled);
+                    feedback.removeClass('hide alert-danger').addClass('alert-info').text(response.message);
+                },
+                error: function (request) {
+                    const message = request.responseJSON?.message || '操作失败，请稍后重试。';
+                    feedback.removeClass('hide alert-info').addClass('alert-danger').text(message);
+                },
+                complete: function () {
+                    button.prop('disabled', false);
+                }
+            });
+        });
+    }
+
+    if (mQuery(container + ' form.yxhk-inbox-request-form').length) {
+        mQuery(document).off('submit.yxhkInboxRequest', 'form.yxhk-inbox-request-form');
+        mQuery(document).on('submit.yxhkInboxRequest', 'form.yxhk-inbox-request-form', function (event) {
+            event.preventDefault();
+            const form = mQuery(this);
+            const button = form.find('button[type="submit"]');
+            const feedback = mQuery('#yxhk-inbox-feedback');
+
+            button.prop('disabled', true);
+            mQuery.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    mQuery.each(response.statuses, function (id, status) {
+                        mQuery('tr[data-account-id="' + id + '"] .yxhk-inbox-account-status').text(status);
+                    });
                     feedback.removeClass('hide alert-danger').addClass('alert-info').text(response.message);
                 },
                 error: function (request) {

@@ -38,11 +38,38 @@ final class InboxController extends CommonController
                             return;
                         }
                         $account['enabled'] = $enabled;
-                        $account['next_at'] = $enabled ? max(time(), ($account['last_attempt'] ?? 0) + 900) : 0;
-                        $account['status'] = $enabled ? '等待首次检查' : '已关闭';
+                        $account['request_pending'] = false;
+                        $account['next_at'] = 0;
+                        $account['status'] = $enabled ? '已启用，等待手动检查' : '已关闭';
                         $data['accounts'][$id] = $account;
                     });
-                    $notice[] = $enabled ? '已启用收件监控，后台每分钟最多检查一个账号。' : '已关闭此账号的自动收取。';
+                    $notice[] = $enabled ? '已启用此账号。点击“检查收件”时才会连接邮箱。' : '已关闭此账号的收件检查。';
+                } elseif ('request' === $action) {
+                    if ('all' !== $id && !isset($profiles[$id])) {
+                        throw new \InvalidArgumentException('邮箱账号不存在。');
+                    }
+                    $selected = 'all' === $id ? array_keys($profiles) : [$id];
+                    $queued = $inbox->transaction(static function (array &$data) use ($selected): int {
+                        $count = 0;
+                        $now = time();
+                        foreach ($selected as $accountId) {
+                            if (empty($data['accounts'][$accountId]['enabled'])) {
+                                continue;
+                            }
+                            $account = &$data['accounts'][$accountId];
+                            $account['request_pending'] = true;
+                            $account['next_at'] = max($now, ((int) ($account['last_attempt'] ?? 0)) + 900);
+                            $account['status'] = $account['next_at'] > $now ? '已排队，等待登录间隔' : '已排队，等待检查';
+                            ++$count;
+                            unset($account);
+                        }
+
+                        return $count;
+                    });
+                    if (0 === $queued) {
+                        throw new \InvalidArgumentException('没有已启用的收件账号。');
+                    }
+                    $notice[] = '已安排 '.$queued.' 个账号各检查一次，后台每分钟最多检查一个账号。';
                 } elseif ('handled' === $action) {
                     $inbox->transaction(static function (array &$data) use ($id, $request): void {
                         if (!isset($data['messages'][$id])) {
@@ -58,13 +85,15 @@ final class InboxController extends CommonController
                 $error = $exception->getMessage();
                 $notice[] = $error;
             }
-            if ('account' === $action && $request->isXmlHttpRequest()) {
-                $state = $inbox->read()['accounts'][$id] ?? [];
+            if (in_array($action, ['account', 'request'], true) && $request->isXmlHttpRequest()) {
+                $states = $inbox->read()['accounts'];
+                $state = $states[$id] ?? [];
 
                 return $this->json([
                     'ok' => null === $error,
                     'enabled' => !empty($state['enabled']),
                     'status' => $state['status'] ?? '未启用',
+                    'statuses' => array_map(static fn (array $account): string => (string) ($account['status'] ?? '未启用'), $states),
                     'message' => end($notice),
                 ], null === $error ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
             }
