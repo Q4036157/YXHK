@@ -17,18 +17,25 @@ final class InboxPoller
         $profiles = $this->queue->profiles();
         $now = time();
         $selected = $this->store->transaction(static function (array &$data) use ($profiles, $now): ?string {
-            foreach ($data['accounts'] as $id => &$account) {
+            $selected = null;
+            $earliest = PHP_INT_MAX;
+            foreach ($data['accounts'] as $id => $account) {
                 if (empty($account['enabled']) || !isset($profiles[$id]) || !in_array($profiles[$id]['type'] ?? '', ['163', '126'], true)
                     || ($account['next_at'] ?? 0) > $now) {
                     continue;
                 }
-                $account['next_at'] = $now + self::INTERVAL;
-                $account['last_attempt'] = $now;
-
-                return (string) $id;
+                $nextAt = (int) ($account['next_at'] ?? 0);
+                if ($nextAt < $earliest) {
+                    $selected = (string) $id;
+                    $earliest = $nextAt;
+                }
+            }
+            if (null !== $selected) {
+                $data['accounts'][$selected]['next_at'] = $now + self::INTERVAL;
+                $data['accounts'][$selected]['last_attempt'] = $now;
             }
 
-            return null;
+            return $selected;
         });
         if (null === $selected) {
             return '暂无到期的收件账号。';

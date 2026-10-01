@@ -32,9 +32,9 @@ final class InboxWorkerCommand extends Command
                 try {
                     $output->writeln($this->poller->pollOne());
                 } catch (\Throwable $exception) {
-                    $output->writeln('客户回复检查发生内部错误，5 分钟后重试。');
+                    $output->writeln('客户回复检查发生内部错误，1 分钟后重试。');
                 }
-                sleep(300);
+                sleep(60);
             }
         } finally {
             flock($lock, LOCK_UN);

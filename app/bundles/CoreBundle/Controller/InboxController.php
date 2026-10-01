@@ -20,9 +20,10 @@ final class InboxController extends CommonController
             if (!$this->isCsrfTokenValid('yxhk_inbox', $request->request->getString('_token'))) {
                 throw $this->createAccessDeniedException('页面已过期，请刷新重试。');
             }
+            $action = $request->request->getString('action');
+            $id = $request->request->getString('id');
+            $error = null;
             try {
-                $action = $request->request->getString('action');
-                $id = $request->request->getString('id');
                 if ('account' === $action) {
                     if (!isset($profiles[$id])) {
                         throw new \InvalidArgumentException('邮箱账号不存在。');
@@ -31,18 +32,7 @@ final class InboxController extends CommonController
                     if ($enabled && (empty($profiles[$id]['username']) || empty($profiles[$id]['password']))) {
                         throw new \InvalidArgumentException('这个邮箱没有完整的账号和授权码。');
                     }
-                    $inbox->transaction(static function (array &$data) use ($id, $enabled, $profiles): void {
-                        if ($enabled) {
-                            $active = array_filter($data['accounts'], static fn (array $account): bool => !empty($account['enabled']));
-                            if (count($active) >= 2 && empty($data['accounts'][$id]['enabled'])) {
-                                throw new \InvalidArgumentException('首批最多启用两个收件账号。');
-                            }
-                            foreach ($active as $activeId => $account) {
-                                if ($activeId !== $id && ($profiles[$activeId]['type'] ?? null) === $profiles[$id]['type']) {
-                                    throw new \InvalidArgumentException('首批每种邮箱只启用一个账号。');
-                                }
-                            }
-                        }
+                    $inbox->transaction(static function (array &$data) use ($id, $enabled): void {
                         $account = $data['accounts'][$id] ?? [];
                         if ($enabled && !empty($account['enabled'])) {
                             return;
@@ -52,7 +42,7 @@ final class InboxController extends CommonController
                         $account['status'] = $enabled ? '等待首次检查' : '已关闭';
                         $data['accounts'][$id] = $account;
                     });
-                    $notice[] = $enabled ? '已启用低频收取，后台任务最多每 5 分钟检查一个账号。' : '已关闭此账号的自动收取。';
+                    $notice[] = $enabled ? '已启用收件监控，后台每分钟最多检查一个账号。' : '已关闭此账号的自动收取。';
                 } elseif ('handled' === $action) {
                     $inbox->transaction(static function (array &$data) use ($id, $request): void {
                         if (!isset($data['messages'][$id])) {
@@ -65,7 +55,18 @@ final class InboxController extends CommonController
                     throw new \InvalidArgumentException('操作无效。');
                 }
             } catch (\InvalidArgumentException|\RuntimeException $exception) {
-                $notice[] = $exception->getMessage();
+                $error = $exception->getMessage();
+                $notice[] = $error;
+            }
+            if ('account' === $action && $request->isXmlHttpRequest()) {
+                $state = $inbox->read()['accounts'][$id] ?? [];
+
+                return $this->json([
+                    'ok' => null === $error,
+                    'enabled' => !empty($state['enabled']),
+                    'status' => $state['status'] ?? '未启用',
+                    'message' => end($notice),
+                ], null === $error ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
             }
             foreach ($notice as $message) {
                 $request->getSession()->getFlashBag()->add('yxhk_inbox', $message);

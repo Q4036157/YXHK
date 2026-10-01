@@ -325,6 +325,39 @@ Mautic.onPageLoad = function (container, response, inModal) {
     //initiate links
     Mautic.makeLinksAlive(mQuery(container + " a[data-toggle='ajax']"));
 
+    if (mQuery(container + ' form.yxhk-inbox-account-form').length) {
+        mQuery(document).off('submit.yxhkInbox', 'form.yxhk-inbox-account-form');
+        mQuery(document).on('submit.yxhkInbox', 'form.yxhk-inbox-account-form', function (event) {
+            event.preventDefault();
+            const form = mQuery(this);
+            const button = form.find('button[type="submit"]');
+            const status = form.closest('tr').find('.yxhk-inbox-account-status');
+            const feedback = mQuery('#yxhk-inbox-feedback');
+
+            button.prop('disabled', true);
+            mQuery.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    form.find('input[name="enabled"]').val(response.enabled ? '0' : '1');
+                    status.text(response.status);
+                    button.text(response.enabled ? '关闭监控' : '启用监控');
+                    button.toggleClass('btn-primary', !response.enabled).toggleClass('btn-default', response.enabled);
+                    feedback.removeClass('hide alert-danger').addClass('alert-info').text(response.message);
+                },
+                error: function (request) {
+                    const message = request.responseJSON?.message || '操作失败，请稍后重试。';
+                    feedback.removeClass('hide alert-info').addClass('alert-danger').text(message);
+                },
+                complete: function () {
+                    button.prop('disabled', false);
+                }
+            });
+        });
+    }
+
     //initialize forms
     mQuery(container + " form[data-toggle='ajax']").each(function (index) {
         Mautic.ajaxifyForm(mQuery(this).attr('name'));

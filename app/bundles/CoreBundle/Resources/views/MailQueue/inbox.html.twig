@@ -4,17 +4,18 @@
 {% block content %}
 {% set token = csrf_token('yxhk_inbox') %}
 <div class="pa-lg">
+<div id="yxhk-inbox-feedback" class="alert hide" role="status" aria-live="polite"></div>
 {% for message in notice %}<div class="alert alert-info">{{ message }}</div>{% endfor %}
 <div class="panel panel-default"><div class="panel-body">
 <h3>收件监控</h3>
 <p>邮件仍保存在各自的原邮箱。此页只读取最近 20 封邮件的发件人、主题和时间，不读取正文，也不会把原邮箱的邮件标记为已读。请到对应邮箱处理和回复。</p>
-<p>首批最多启用一个 163 和一个 126，其他账号保持关闭。启用前，请在邮箱网页设置中打开 IMAP 服务；使用与 SMTP 对应的授权码。每个账号至少间隔 15 分钟检查一次，后台每 5 分钟最多检查一个账号。登录失败会自动暂停该账号，避免反复尝试。</p>
+<p>启用前，请在邮箱网页设置中打开 IMAP 服务；使用与 SMTP 对应的授权码。每个账号至少间隔 15 分钟检查一次，后台每分钟最多检查一个账号。账号越多，轮完一遍所需时间越长。登录失败会自动暂停该账号，避免反复尝试。</p>
 <table class="table"><thead><tr><th>邮箱</th><th>状态</th><th>最近成功</th><th>操作</th></tr></thead><tbody>
 {% for id, account in accounts %}
 <tr><td>{{ account.email }}<br><small>{{ account.label }}</small></td>
-<td>{{ account.state.status|default('未启用') }}</td>
+<td class="yxhk-inbox-account-status">{{ account.state.status|default('未启用') }}</td>
 <td>{{ account.state.last_success is defined ? account.state.last_success|date('Y-m-d H:i') : '尚未连接' }}</td>
-<td><form method="post" action="{{ path('yxhk_inbox') }}">
+<td><form class="yxhk-inbox-account-form" method="post" action="{{ path('yxhk_inbox') }}">
 <input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="account"><input type="hidden" name="id" value="{{ id }}">
 <input type="hidden" name="enabled" value="{{ account.state.enabled|default(false) ? '0' : '1' }}">
 <button class="btn btn-sm {{ account.state.enabled|default(false) ? 'btn-default' : 'btn-primary' }}" type="submit" {{ not account.configured ? 'disabled' }}>{{ account.state.enabled|default(false) ? '关闭监控' : '启用监控' }}</button>
