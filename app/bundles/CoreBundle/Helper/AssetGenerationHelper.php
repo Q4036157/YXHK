@@ -71,7 +71,11 @@ final readonly class AssetGenerationHelper
         CoreParametersHelper $coreParametersHelper,
         AppVersion $appVersion,
     ) {
-        $this->version = substr(hash('sha1', $coreParametersHelper->get('secret_key').$appVersion->getVersion()), 0, 8);
+        $releaseFile = dirname(__DIR__, 4).'/.pxy-release.json';
+        $release = is_file($releaseFile) ? json_decode((string) file_get_contents($releaseFile), true) : null;
+        $commit = is_array($release) ? (string) ($release['commit'] ?? '') : '';
+        $releaseCommit = preg_match('/^[a-f0-9]{40}$/D', $commit) ? $commit : '';
+        $this->version = substr(hash('sha1', $coreParametersHelper->get('secret_key').$appVersion->getVersion().$releaseCommit), 0, 8);
     }
 
     /**
