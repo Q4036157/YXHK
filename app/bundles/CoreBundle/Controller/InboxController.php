@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Mautic\CoreBundle\Controller;
 
 use Mautic\CoreBundle\MailQueue\InboxStore;
+use Mautic\CoreBundle\MailQueue\NeteaseImapClient;
 use Mautic\CoreBundle\MailQueue\QueueStore;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 final class InboxController extends CommonController
 {
-    public function indexAction(Request $request, QueueStore $queue, InboxStore $inbox): Response
+    public function indexAction(Request $request, QueueStore $queue, InboxStore $inbox, NeteaseImapClient $imap): Response
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $profiles = array_filter($queue->profiles(), static fn (array $profile): bool => in_array($profile['type'] ?? '', ['163', '126'], true));
@@ -22,6 +23,23 @@ final class InboxController extends CommonController
             }
             $action = $request->request->getString('action');
             $id = $request->request->getString('id');
+            if ('detail' === $action) {
+                try {
+                    $message = $inbox->read()['messages'][$id] ?? null;
+                    $profile = $profiles[$message['profile_id'] ?? ''] ?? null;
+                    $parts = explode(':', $id);
+                    if (null === $message || null === $profile || 3 !== count($parts)
+                        || $parts[0] !== $message['profile_id'] || !ctype_digit($parts[1]) || !ctype_digit($parts[2])
+                        || empty($profile['username']) || empty($profile['password'])) {
+                        throw new \InvalidArgumentException('这条邮件记录或邮箱配置不存在。');
+                    }
+                    $body = $imap->messageText($profile['type'], $profile['username'], $profile['password'], $parts[1], $parts[2]);
+
+                    return $this->json(['ok' => true, 'body' => $body], Response::HTTP_OK, ['Cache-Control' => 'no-store']);
+                } catch (\InvalidArgumentException|\RuntimeException $exception) {
+                    return $this->json(['ok' => false, 'message' => $exception->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY, ['Cache-Control' => 'no-store']);
+                }
+            }
             $error = null;
             try {
                 if ('account' === $action) {

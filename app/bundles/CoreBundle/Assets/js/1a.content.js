@@ -390,6 +390,46 @@ Mautic.onPageLoad = function (container, response, inModal) {
         });
     }
 
+    if (mQuery(container + ' form.yxhk-inbox-detail-form').length) {
+        mQuery(document).off('submit.yxhkInboxDetail', 'form.yxhk-inbox-detail-form');
+        mQuery(document).on('submit.yxhkInboxDetail', 'form.yxhk-inbox-detail-form', function (event) {
+            event.preventDefault();
+            const form = mQuery(this);
+            const row = form.closest('tr');
+            const button = form.find('button[type="submit"]');
+            if (row.next().hasClass('yxhk-inbox-detail-row')) {
+                row.next().remove();
+                button.text('详情');
+                return;
+            }
+            mQuery('.yxhk-inbox-detail-row').remove();
+            mQuery('form.yxhk-inbox-detail-form button').text('详情');
+            button.prop('disabled', true).text('读取中…');
+            mQuery.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    const detail = mQuery('<tr class="yxhk-inbox-detail-row"><td colspan="5"><strong>邮件正文</strong><pre style="white-space:pre-wrap; overflow-wrap:anywhere; max-height:480px; overflow:auto"></pre></td></tr>');
+                    detail.find('pre').text(response.body);
+                    row.after(detail);
+                    button.text('收起详情');
+                },
+                error: function (request) {
+                    const message = request.responseJSON?.message || '读取邮件失败，请稍后重试。';
+                    const detail = mQuery('<tr class="yxhk-inbox-detail-row"><td colspan="5" class="text-danger"></td></tr>');
+                    detail.find('td').text(message);
+                    row.after(detail);
+                    button.text('收起详情');
+                },
+                complete: function () {
+                    button.prop('disabled', false);
+                }
+            });
+        });
+    }
+
     //initialize forms
     mQuery(container + " form[data-toggle='ajax']").each(function (index) {
         Mautic.ajaxifyForm(mQuery(this).attr('name'));

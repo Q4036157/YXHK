@@ -8,7 +8,7 @@
 {% for message in notice %}<div class="alert alert-info">{{ message }}</div>{% endfor %}
 <div class="panel panel-default"><div class="panel-body">
 <h3>客户回复检查</h3>
-<p>邮件仍保存在各自的原邮箱。此页只读取最近 20 封邮件的发件人、主题和时间，不读取正文，也不会把原邮箱的邮件标记为已读。请到对应邮箱处理和回复。</p>
+<p>邮件仍保存在各自的原邮箱。检查收件时只读取最近 20 封邮件的发件人、主题和时间；点击“详情”才按需读取该封邮件的正文，不会把原邮箱的邮件标记为已读。请到对应邮箱回复。</p>
 <p>启用前，请在邮箱网页设置中打开 IMAP 服务；使用与 SMTP 对应的授权码。只有点击“检查收件”才会连接邮箱，不再定时自动登录。每个账号两次检查至少间隔 15 分钟，后台每分钟最多检查一个账号。登录失败会暂停该账号。</p>
 <form class="yxhk-inbox-request-form" method="post" action="{{ path('yxhk_inbox') }}">
 <input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="request"><input type="hidden" name="id" value="all">
@@ -36,7 +36,8 @@
 <p>“已处理”只改变本页标记，不会移动或删除原邮箱中的邮件。</p>
 <table class="table"><thead><tr><th>时间</th><th>收到的邮箱</th><th>发件人</th><th>主题</th><th>状态</th></tr></thead><tbody>
 {% for key, message in messages %}
-<tr><td>{{ message.received_at|date('Y-m-d H:i') }}</td><td>{{ accounts[message.profile_id].email }}</td><td>{{ message.from }}</td><td>{{ message.subject ?: '（无主题）' }}</td>
+<tr><td>{{ message.received_at|date('Y-m-d H:i') }}</td><td>{{ accounts[message.profile_id].email }}</td><td>{{ message.from }}</td><td>{{ message.subject ?: '（无主题）' }}
+<form class="yxhk-inbox-detail-form" method="post" action="{{ path('yxhk_inbox') }}" style="display:inline-block; margin-left:8px"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="detail"><input type="hidden" name="id" value="{{ key }}"><button class="btn btn-sm btn-default" type="submit">详情</button></form></td>
 <td><form method="post" action="{{ path('yxhk_inbox') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="action" value="handled"><input type="hidden" name="id" value="{{ key }}"><input type="hidden" name="handled" value="{{ message.handled ? '0' : '1' }}"><button class="btn btn-sm btn-default" type="submit">{{ message.handled ? '已处理，改为待处理' : '待处理，标记完成' }}</button></form></td></tr>
 {% else %}<tr><td colspan="5">暂无收件记录。启用账号后点击“检查收件”。</td></tr>{% endfor %}
 </tbody></table></div></div>

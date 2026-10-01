@@ -6,6 +6,51 @@ namespace Mautic\CoreBundle\MailQueue;
 
 final class NeteaseImapClient
 {
+    public function messageText(string $type, string $username, string $password, string $validity, string $uid): string
+    {
+        if (!in_array($type, ['163', '126'], true) || !ctype_digit($validity) || !ctype_digit($uid) || '0' === $uid) {
+            throw new \InvalidArgumentException('邮件标识无效。');
+        }
+        $host = '163' === $type ? 'imap.163.com' : 'imap.126.com';
+        $socket = @stream_socket_client('ssl://'.$host.':993', $errorCode, $errorMessage, 8, STREAM_CLIENT_CONNECT,
+            stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'peer_name' => $host]]));
+        if (false === $socket) {
+            throw new \RuntimeException('无法连接网易 IMAP 服务器。');
+        }
+        stream_set_timeout($socket, 8);
+        try {
+            $greeting = fgets($socket, 8192);
+            if (false === $greeting || !str_starts_with($greeting, '* OK')) {
+                throw new \RuntimeException('网易 IMAP 服务器未接受连接。');
+            }
+            if (!$this->command($socket, 'LOGIN '.$this->quote($username).' '.$this->quote($password))) {
+                throw new \RuntimeException('IMAP 登录失败，请检查授权码。');
+            }
+            if (!$this->command($socket, 'ID ("name" "YXHK" "version" "1.0" "vendor" "YXHK")')) {
+                throw new \RuntimeException('网易服务器未接受 IMAP 客户端身份信息。');
+            }
+            $select = $this->command($socket, 'EXAMINE INBOX');
+            if (false === $select || !preg_match('/\[UIDVALIDITY (\d+)\]/i', $select, $match)) {
+                throw new \RuntimeException('无法以只读方式打开收件箱。');
+            }
+            if ($match[1] !== $validity) {
+                throw new \RuntimeException('收件箱已重建，无法定位这封邮件。请重新检查收件。');
+            }
+            $response = $this->command($socket, 'UID FETCH '.$uid.' (UID BODY.PEEK[]<0.65536>)');
+            if (false === $response || !preg_match('/\bUID\s+'.preg_quote($uid, '/').'\b/i', $response)
+                || !preg_match('/\{(\d+)\}\r\n/', $response, $literal, PREG_OFFSET_CAPTURE)) {
+                throw new \RuntimeException('原邮箱中找不到这封邮件，可能已被移动或删除。');
+            }
+            $start = $literal[0][1] + strlen($literal[0][0]);
+            $raw = substr($response, $start, (int) $literal[1][0]);
+            $this->command($socket, 'LOGOUT');
+
+            return ImapMessageText::decode($raw);
+        } finally {
+            fclose($socket);
+        }
+    }
+
     public function recentHeaders(string $type, string $username, string $password): array
     {
         $host = '163' === $type ? 'imap.163.com' : 'imap.126.com';
@@ -99,12 +144,12 @@ final class NeteaseImapClient
             if (preg_match('/\{(\d+)\}\r\n$/', $line, $match)) {
                 $remaining = (int) $match[1];
                 if ($remaining > 65536) {
-                    throw new \RuntimeException('IMAP 邮件头超过读取上限。');
+                    throw new \RuntimeException('IMAP 邮件内容超过读取上限。');
                 }
                 while ($remaining > 0) {
                     $part = fread($socket, $remaining);
                     if (false === $part || '' === $part) {
-                        throw new \RuntimeException('IMAP 邮件头读取中断。');
+                        throw new \RuntimeException('IMAP 邮件内容读取中断。');
                     }
                     $response .= $part;
                     $remaining -= strlen($part);
