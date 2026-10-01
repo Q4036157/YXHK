@@ -10,11 +10,10 @@ use Mautic\CoreBundle\MailQueue\QueueService;
 use Mautic\CoreBundle\MailQueue\QueueStore;
 use Mautic\CoreBundle\MailQueue\QueueTransport;
 use Mautic\EmailBundle\Entity\Email;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class MailQueueController extends AbstractController
+final class MailQueueController extends CommonController
 {
     public function indexAction(Request $request, QueueStore $store, QueueService $queue, ManagerRegistry $doctrine): Response
     {
@@ -122,8 +121,17 @@ final class MailQueueController extends AbstractController
             $jobs[] = $job;
         }
 
-        return $this->render('@MauticCore/MailQueue/index.html.twig', ['profiles' => $safeProfiles, 'state' => $state,
-            'jobs' => $jobs, 'notice' => $notice, 'online' => time() - $state['heartbeat'] < 20,
-            'emails' => $doctrine->getRepository(Email::class)->findBy(['variantParent' => null], ['id' => 'DESC'])]);
+        return $this->delegateView([
+            'contentTemplate' => '@MauticCore/MailQueue/index.html.twig',
+            'viewParameters' => [
+                'profiles' => $safeProfiles,
+                'state' => $state,
+                'jobs' => $jobs,
+                'notice' => $notice,
+                'online' => time() - $state['heartbeat'] < 20,
+                'emails' => $doctrine->getRepository(Email::class)->findBy(['variantParent' => null], ['id' => 'DESC']),
+            ],
+            'passthroughVars' => ['mauticContent' => 'yxhkMailQueue'],
+        ]);
     }
 }

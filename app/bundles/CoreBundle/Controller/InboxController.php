@@ -6,11 +6,10 @@ namespace Mautic\CoreBundle\Controller;
 
 use Mautic\CoreBundle\MailQueue\InboxStore;
 use Mautic\CoreBundle\MailQueue\QueueStore;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class InboxController extends AbstractController
+final class InboxController extends CommonController
 {
     public function indexAction(Request $request, QueueStore $queue, InboxStore $inbox): Response
     {
@@ -88,10 +87,14 @@ final class InboxController extends AbstractController
         $messages = array_filter($data['messages'], static fn (array $message): bool => isset($accounts[$message['profile_id']]));
         uasort($messages, static fn (array $a, array $b): int => $b['received_at'] <=> $a['received_at']);
 
-        return $this->render('@MauticCore/MailQueue/inbox.html.twig', [
-            'accounts' => $accounts,
-            'messages' => array_slice($messages, 0, 100, true),
-            'notice' => $notice,
+        return $this->delegateView([
+            'contentTemplate' => '@MauticCore/MailQueue/inbox.html.twig',
+            'viewParameters' => [
+                'accounts' => $accounts,
+                'messages' => array_slice($messages, 0, 100, true),
+                'notice' => $notice,
+            ],
+            'passthroughVars' => ['mauticContent' => 'yxhkInbox'],
         ]);
     }
 }
