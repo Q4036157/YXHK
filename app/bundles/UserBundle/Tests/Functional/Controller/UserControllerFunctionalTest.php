@@ -143,7 +143,7 @@ final class UserControllerFunctionalTest extends MauticMysqlTestCase
                 'user[plainPassword][password]' => 'same123',
                 'user[plainPassword][confirm]'  => 'same123',
             ],
-            'Please enter a stronger password. Your password must use a combination of upper and lower case, special characters and numbers.',
+            'Password is too easy to guess. Avoid repeated-digit patterns or sequential runs and use at least 6 characters.',
         ];
     }
 
@@ -188,7 +188,7 @@ final class UserControllerFunctionalTest extends MauticMysqlTestCase
                 'user[plainPassword][password]' => 'same123',
                 'user[plainPassword][confirm]'  => 'same123',
             ],
-            'Please enter a stronger password. Your password must use a combination of upper and lower case, special characters and numbers.',
+            'Password is too easy to guess. Avoid repeated-digit patterns or sequential runs and use at least 6 characters.',
         ];
     }
 

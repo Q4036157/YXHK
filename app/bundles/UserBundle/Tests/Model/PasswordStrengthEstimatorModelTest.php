@@ -51,4 +51,13 @@ final class PasswordStrengthEstimatorModelTest extends MauticMysqlTestCase
         $this->assertGreaterThanOrEqual(1, count($violations));
         $this->assertTrue((bool) $hasNotWeakConstraintViolation);
     }
+
+    public function testAllowsNumericPasswordsThatAreNotObviousPatterns(): void
+    {
+        $passwordStrengthEstimator = self::getContainer()->get(PasswordStrengthEstimatorModel::class);
+
+        $this->assertTrue($passwordStrengthEstimator->validate('8462917'));
+        $this->assertFalse($passwordStrengthEstimator->validate('11111111'));
+        $this->assertFalse($passwordStrengthEstimator->validate('1234567'));
+    }
 }

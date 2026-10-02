@@ -150,6 +150,9 @@ final class UserApiControllerFunctionalTest extends MauticMysqlTestCase
         yield [Response::HTTP_BAD_REQUEST, 'aaa'];
         yield [Response::HTTP_BAD_REQUEST, 'qwerty'];
         yield [Response::HTTP_BAD_REQUEST, 'qwerty123'];
+        yield [Response::HTTP_CREATED, '8462917'];
+        yield [Response::HTTP_BAD_REQUEST, '11111111'];
+        yield [Response::HTTP_BAD_REQUEST, '1234567'];
         yield [Response::HTTP_CREATED, 'Qwertee@123'];
     }
 
